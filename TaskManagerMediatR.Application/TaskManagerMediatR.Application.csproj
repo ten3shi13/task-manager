@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TaskManagerMediatR.Contracts\TaskManagerMediatR.Contracts.csproj" />
+    <ProjectReference Include="..\TaskManagerMediatR.Domain\TaskManagerMediatR.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
