@@ -1,7 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
+using TaskManagerMediatR.Infrastructure.Projects.Persistence;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence;
+using TaskManagerMediatR.Infrastructure.Users.Persistence;
 
 namespace TaskManagerMediatR.Infrastructure
 {
@@ -14,6 +18,11 @@ namespace TaskManagerMediatR.Infrastructure
                 {
                     options.UseNpgsql(configuration.GetConnectionString(nameof(TaskManagerMediatRDbContext)));
                 });
+
+            services.AddScoped<IProjectRepository, ProjectRepository>();
+            services.AddScoped<ITaskRepository, TaskRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IUnitOfWork>(serviceProvider => serviceProvider.GetRequiredService<TaskManagerMediatRDbContext>());
 
             return services;
         } 
