@@ -19,6 +19,7 @@ namespace TaskManagerMediatR.Infrastructure
                     options.UseNpgsql(configuration.GetConnectionString(nameof(TaskManagerMediatRDbContext)));
                 });
 
+            services.AddScoped<ICurrentUser, CurrentUser>();
             services.AddScoped<IProjectRepository, ProjectRepository>();
             services.AddScoped<ITaskRepository, TaskRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
