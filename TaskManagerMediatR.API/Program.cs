@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using TaskManagerMediatR.API.Middleware;
+using TaskManagerMediatR.Application;
 using TaskManagerMediatR.Infrastructure;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence;
 
@@ -20,9 +22,11 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

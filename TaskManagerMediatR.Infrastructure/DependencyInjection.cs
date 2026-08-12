@@ -27,6 +27,8 @@ namespace TaskManagerMediatR.Infrastructure
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUnitOfWork>(serviceProvider => serviceProvider.GetRequiredService<TaskManagerMediatRDbContext>());
 
+            services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
+
             return services;
         } 
     }
