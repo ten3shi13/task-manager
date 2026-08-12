@@ -1,6 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using TaskManagerMediatR.Infrastructure;
+using TaskManagerMediatR.Infrastructure.Shared.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 

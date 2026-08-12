@@ -2,9 +2,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Infrastructure.Projects.Persistence;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence;
+using TaskManagerMediatR.Infrastructure.Shared.Persistence.Authentication;
 using TaskManagerMediatR.Infrastructure.Users.Persistence;
 
 namespace TaskManagerMediatR.Infrastructure
