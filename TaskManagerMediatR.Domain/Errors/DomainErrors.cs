@@ -9,8 +9,14 @@ namespace TaskManagerMediatR.Domain.Errors
             public static readonly Error EmptyPassword =
                 Error.Validation("User.EmptyPassword", "Password hash cannot be empty");
 
-            public static readonly Error NotFound =
-                Error.NotFound("User.NotFound", "User was not found");
+            public static readonly Func<Guid, Error> NotFound = id =>
+                Error.NotFound("User.NotFound", $"The member with the identifier {id} was not found");
+
+            public static readonly Error InvalidCredentials = 
+                Error.Unauthorized("User.InvalidCredentials", "The provided credentials are invalid");
+
+            public static readonly Error EmailAlreadyInUse = 
+                Error.Unauthorized("User.EmailAlreadyInUse", "The specified email is already in use");
 
         }
 
@@ -120,6 +126,9 @@ namespace TaskManagerMediatR.Domain.Errors
 
             public static readonly Error CommentNotFound =
                 Error.NotFound("Task.CommentNotFound", "Comment was not found");
+
+            public static readonly Error AlreadyCompleted =
+                Error.NotFound("Task.AlreadyCompleted", "Task already completed on the project");
 
             public static readonly Error OnlyAuthorCanDeleteComment =
                 Error.Forbidden("Task.OnlyAuthorCanDeleteComment", "Only the author can delete the comment");

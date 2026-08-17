@@ -1,4 +1,4 @@
-﻿using System.Xml.Linq;
+﻿using TaskManagerMediatR.Domain.DomainEvents;
 using TaskManagerMediatR.Domain.Errors;
 using TaskManagerMediatR.Domain.Primitives;
 using TaskManagerMediatR.Domain.Shared;
@@ -75,6 +75,9 @@ namespace TaskManagerMediatR.Domain.Models
                 return Result.Failure(DomainErrors.Project.MemberAlreadyExists);
 
             _members.Add(new ProjectMember(userId, ProjectRole.Member));
+
+            RaiseDomainEvent(new ProjectMemberAddedDomainEvent(Guid.NewGuid(), Id, userId));
+
             return Result.Success();
         }
 

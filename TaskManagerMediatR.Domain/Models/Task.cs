@@ -1,7 +1,8 @@
-﻿using TaskManagerMediatR.Domain.Errors;
+﻿using TaskManagerMediatR.Domain.DomainEvents;
 using TaskManagerMediatR.Domain.Primitives;
 using TaskManagerMediatR.Domain.Shared;
 using TaskManagerMediatR.Domain.ValueObjects;
+using DomainErrors = TaskManagerMediatR.Domain.Errors.DomainErrors;
 
 namespace TaskManagerMediatR.Domain.Models
 {
@@ -102,11 +103,28 @@ namespace TaskManagerMediatR.Domain.Models
 
         public Result ChangeStatus(Status status)
         {
+            if (Status == status)
+                return Result.Success();
+
+            if (Status == Status.Done)
+                return Result.Failure(DomainErrors.Task.AlreadyCompleted);
+
+            var previousStatus = Status;
+
             Status = status;
             UpdatedAt = DateTime.UtcNow;
 
+            RaiseDomainEvent(new TaskStatusChangedDomainEvent(Guid.NewGuid(), Id));
+
+            if (status == Status.Done)
+            {
+                RaiseDomainEvent(new TaskCompletedDomainEvent(Guid.NewGuid(), Id));
+            }
+
             return Result.Success();
         }
+
+        public Result Complete() => ChangeStatus(Status.Done);
 
         public Result AssignUser(Guid userId, Guid assignedBy)
         {
@@ -115,6 +133,8 @@ namespace TaskManagerMediatR.Domain.Models
 
             _assignments.Add(Assignment.Create(userId, assignedBy));
             UpdatedAt = DateTime.UtcNow;
+
+            RaiseDomainEvent(new TaskAssignedDomainEvent(Guid.NewGuid(), Id, userId));
 
             return Result.Success();
         }
@@ -127,6 +147,8 @@ namespace TaskManagerMediatR.Domain.Models
 
             _assignments.Remove(assignment);
             UpdatedAt = DateTime.UtcNow;
+
+            RaiseDomainEvent(new TaskUnassignedDomainEvent(Guid.NewGuid(), Id, userId));
 
             return Result.Success();
         }

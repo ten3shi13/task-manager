@@ -5,6 +5,7 @@ using TaskManagerMediatR.Application.Shared.Abstractions;
 using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Infrastructure.Projects.Persistence;
+using TaskManagerMediatR.Infrastructure.Services;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence.Authentication;
 using TaskManagerMediatR.Infrastructure.Users.Persistence;
@@ -25,6 +26,9 @@ namespace TaskManagerMediatR.Infrastructure
             services.AddScoped<IProjectRepository, ProjectRepository>();
             services.AddScoped<ITaskRepository, TaskRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+
+            services.AddScoped<IEmailService, EmailService>();
+
             services.AddScoped<IUnitOfWork>(serviceProvider => serviceProvider.GetRequiredService<TaskManagerMediatRDbContext>());
 
             return services;
