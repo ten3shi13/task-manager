@@ -42,7 +42,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask
 
             var user = await _userRepository.GetById(request.UserId, cancellationToken);
             if (user is null)
-                return Result.Failure(DomainErrors.User.NotFound);
+                return Result.Failure(DomainErrors.User.NotFound(request.UserId));
 
             var result = task.AssignUser(request.UserId, request.AssignedById);
             if (result.IsFailure)
