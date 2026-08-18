@@ -3,7 +3,7 @@
     public sealed record ProjectResponse(
         Guid Id,
         string Name,
-        string Description,
+        string? Description,
         DateTime CreatedAt,
         Guid OwnerId,
         IReadOnlyList<ProjectMemberResponse> Members);

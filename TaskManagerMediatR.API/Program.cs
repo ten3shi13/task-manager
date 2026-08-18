@@ -1,6 +1,7 @@
-using Microsoft.OpenApi;
 using Quartz;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using TaskManagerMediatR.API.Middleware;
 using TaskManagerMediatR.Application;
 using TaskManagerMediatR.Infrastructure;
 using TaskManagerMediatR.Infrastructure.BackgroundJobs;
@@ -43,6 +44,7 @@ builder.Services.AddQuartzHostedService(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
