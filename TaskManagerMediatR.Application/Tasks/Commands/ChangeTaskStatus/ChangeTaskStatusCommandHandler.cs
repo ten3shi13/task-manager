@@ -28,7 +28,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.ChangeTaskStatus
             if (task is null)
                 return Result.Failure(DomainErrors.Task.NotFound);
 
-            var project = await _projectRepository.GetById(task.Id, cancellationToken);
+            var project = await _projectRepository.GetById(task.ProjectId, cancellationToken);
             if (project is null || !project.IsMember(request.ChangedById))
                 return Result.Failure(DomainErrors.Project.UserIsNotMember);
 

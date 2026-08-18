@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Models;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence;
-using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 
 namespace TaskManagerMediatR.Infrastructure.Projects.Persistence
 {
@@ -30,6 +30,18 @@ namespace TaskManagerMediatR.Infrastructure.Projects.Persistence
                 .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 
             return project;
+        }
+
+        public async Task<ProjectMember?> GetMember(Guid id, Guid userId, CancellationToken cancellationToken = default)
+        {
+            var project = await _context.Projects
+                    .Include(p => p.Members)
+                    .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+
+            var member = project?.Members
+                .FirstOrDefault(m => m.UserId == userId);
+
+            return member;
         }
 
         public async Task<Guid> Add(Project project, CancellationToken cancellationToken = default)

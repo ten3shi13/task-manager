@@ -34,7 +34,7 @@ namespace TaskManagerMediatR.Application.Projects.Commands.AddProjectMember
 
             var user = await _userRepository.GetById(request.UserId, cancellationToken);
             if (user is null)
-                return Result.Failure(DomainErrors.User.NotFound);
+                return Result.Failure(DomainErrors.User.NotFound(request.UserId));
 
             var addMemberResult = project.AddMember(request.UserId);
             if (addMemberResult.IsFailure)

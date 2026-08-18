@@ -32,7 +32,7 @@ namespace TaskManagerMediatR.Application.Projects.Commands.RemoveProjectMember
 
             var user = await _userRepository.GetById(request.UserId, cancellationToken);
             if (user is null)
-                return Result.Failure(DomainErrors.User.NotFound);
+                return Result.Failure(DomainErrors.User.NotFound(request.UserId));
 
             var removeMemberResult = project.RemoveMember(request.UserId);
             if (removeMemberResult.IsFailure)

@@ -25,7 +25,7 @@ namespace TaskManagerMediatR.Application.Projects.Commands.Create
         {
             var owner = await _userRepository.GetById(request.OwnerId, cancellationToken);
             if (owner is null)
-                return Result.Failure<Guid>(DomainErrors.User.NotFound);
+                return Result.Failure<Guid>(DomainErrors.User.NotFound(request.OwnerId));
 
             var projectResult = Project.Create(Guid.NewGuid(), request.Name, request.Description, request.OwnerId);
             if (projectResult.IsFailure)

@@ -192,10 +192,10 @@ namespace TaskManagerMediatR.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ChangeStatus(Guid id, ChangeTaskStatusCommand request, CancellationToken cancellationToken)
         {
-            var commentResult = await _sender.Send(new ChangeTaskStatusCommand(
+            var statusResult = await _sender.Send(new ChangeTaskStatusCommand(
                 id, request.Status, request.ChangedById), cancellationToken);
 
-            return FromResult(commentResult);
+            return FromResult(statusResult);
 
         }
 

@@ -1,5 +1,4 @@
 ﻿using TaskManagerMediatR.Domain.Primitives;
-using static TaskManagerMediatR.Domain.Errors.DomainErrors;
 
 namespace TaskManagerMediatR.Domain.Models
 {

@@ -1,10 +1,16 @@
+<<<<<<< HEAD
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using TaskManagerMediatR.API.Middleware;
+=======
+using Microsoft.OpenApi;
+using Quartz;
+using Swashbuckle.AspNetCore.SwaggerUI;
+>>>>>>> develop
 using TaskManagerMediatR.Application;
 using TaskManagerMediatR.Infrastructure;
-using TaskManagerMediatR.Infrastructure.Shared.Persistence;
+using TaskManagerMediatR.Infrastructure.BackgroundJobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +29,27 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
+<<<<<<< HEAD
+=======
+
+builder.Services.AddQuartz(configure =>
+{
+    var jobKey = new JobKey(nameof(ProcessOutboxMessagesJob));
+
+    configure.AddJob<ProcessOutboxMessagesJob>(opts => opts.WithIdentity(jobKey));
+
+    configure.AddTrigger(trigger => trigger
+                    .ForJob(jobKey)
+                    .WithSimpleSchedule(schedule => schedule
+                        .WithIntervalInSeconds(100)
+                        .RepeatForever()));
+});
+
+builder.Services.AddQuartzHostedService(options =>
+{
+    options.WaitForJobsToComplete = true;
+});
+>>>>>>> develop
 
 var app = builder.Build();
 
@@ -45,18 +72,18 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider
-        .GetRequiredService<TaskManagerMediatRDbContext>();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var dbContext = scope.ServiceProvider
+//        .GetRequiredService<TaskManagerMediatRDbContext>();
 
-    await dbContext.Database.MigrateAsync();
+//    await dbContext.Database.MigrateAsync();
 
-    var seeder = scope.ServiceProvider
-        .GetRequiredService<IDatabaseSeeder>();
+//    var seeder = scope.ServiceProvider
+//        .GetRequiredService<IDatabaseSeeder>();
 
-    await seeder.SeedAsync();
-}
+//    await seeder.SeedAsync();
+//}
 
 app.Run();
 

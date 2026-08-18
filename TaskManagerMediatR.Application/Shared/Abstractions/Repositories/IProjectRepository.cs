@@ -8,5 +8,6 @@ namespace TaskManagerMediatR.Application.Shared.Abstractions.Repositories
         Task<int> Delete(Guid id, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<Project>> Get(CancellationToken cancellationToken = default);
         Task<Project?> GetById(Guid id, CancellationToken cancellationToken = default);
+        Task<ProjectMember?> GetMember(Guid id, Guid userId, CancellationToken cancellationToken = default);
     }
 }
