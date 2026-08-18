@@ -1,7 +1,7 @@
-using Microsoft.OpenApi.Models;
+using Quartz;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using TaskManagerMediatR.API.Middleware;
-using Quartz;
 using TaskManagerMediatR.Application;
 using TaskManagerMediatR.Infrastructure;
 using TaskManagerMediatR.Infrastructure.BackgroundJobs;
