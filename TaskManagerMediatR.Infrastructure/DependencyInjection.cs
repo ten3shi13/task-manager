@@ -8,6 +8,7 @@ using TaskManagerMediatR.Infrastructure.Projects.Persistence;
 using TaskManagerMediatR.Infrastructure.Services;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence.Authentication;
+using TaskManagerMediatR.Infrastructure.Shared.Persistence.Interceptors;
 using TaskManagerMediatR.Infrastructure.Users.Persistence;
 
 namespace TaskManagerMediatR.Infrastructure
@@ -16,10 +17,13 @@ namespace TaskManagerMediatR.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddSingleton<ConvertDomainEventsToOutboxMessagesInterceptor>();
+
             services.AddDbContext<TaskManagerMediatRDbContext>(
-                options =>
+                (sp, options) =>
                 {
-                    options.UseNpgsql(configuration.GetConnectionString(nameof(TaskManagerMediatRDbContext)));
+                    options.UseNpgsql(configuration.GetConnectionString(nameof(TaskManagerMediatRDbContext)))
+                        .AddInterceptors(sp.GetRequiredService<ConvertDomainEventsToOutboxMessagesInterceptor>());
                 });
 
             services.AddScoped<ICurrentUser, CurrentUser>();
