@@ -38,7 +38,7 @@ namespace TaskManagerMediatR.Application.Projects.Commands.AddProjectMember
 
             var addMemberResult = project.AddMember(request.UserId);
             if (addMemberResult.IsFailure)
-                return Result.Failure(addMemberResult.Error);
+                return Result.Failure(addMemberResult.Errors);
 
             await _unitOfWork.CommitChangesAsync(cancellationToken);
 

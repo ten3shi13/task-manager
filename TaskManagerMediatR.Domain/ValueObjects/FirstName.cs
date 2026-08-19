@@ -11,20 +11,12 @@ namespace TaskManagerMediatR.Domain.ValueObjects
         private FirstName() { }
         private FirstName(string value) => Value = value;
 
-        public static Result<FirstName> Create(string firstName)
-        {
-            if (string.IsNullOrWhiteSpace(firstName))
-            {
-                return Result.Failure<FirstName>(DomainErrors.FirstName.Empty);
-            }
+        public static Result<FirstName> Create(string firstName) =>
 
-            if (firstName.Length > FIRST_NAME_MAX_LENGTH)
-            {
-                return Result.Failure<FirstName>(DomainErrors.FirstName.InvalidLength);
-            }
-
-            return new FirstName(firstName);
-        }
+            Result.Ensure(firstName,
+                (fn => !string.IsNullOrWhiteSpace(fn), DomainErrors.FirstName.Empty),
+                (fn => fn.Length <= FIRST_NAME_MAX_LENGTH, DomainErrors.FirstName.InvalidLength))
+                .Map(fn => new FirstName(fn));
 
     }
 }

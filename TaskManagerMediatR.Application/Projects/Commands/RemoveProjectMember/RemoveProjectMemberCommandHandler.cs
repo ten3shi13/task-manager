@@ -36,7 +36,7 @@ namespace TaskManagerMediatR.Application.Projects.Commands.RemoveProjectMember
 
             var removeMemberResult = project.RemoveMember(request.UserId);
             if (removeMemberResult.IsFailure)
-                return Result.Failure(removeMemberResult.Error);
+                return Result.Failure(removeMemberResult.Errors);
 
             await _unitOfWork.CommitChangesAsync(cancellationToken);
 

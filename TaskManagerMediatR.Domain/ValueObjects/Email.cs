@@ -4,34 +4,26 @@ using TaskManagerMediatR.Domain.Shared;
 
 namespace TaskManagerMediatR.Domain.ValueObjects
 {
-    public sealed record Email
+    public sealed partial record Email
     {
         public const string EMAIL_PATTERN = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+
+        [GeneratedRegex(EMAIL_PATTERN)]
+        private static partial Regex EmailRegex();
+
         public const int EMAIL_MAX_LENGTH = 254;
         public string Value { get; } = string.Empty;
 
         private Email() { }
         private Email(string value) => Value = value;
 
-        public static Result<Email> Create(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                return Result.Failure<Email>(DomainErrors.Email.Empty);
-            }
-
-            if (!Regex.IsMatch(email, EMAIL_PATTERN))
-            {
-                return Result.Failure<Email>(DomainErrors.Email.InvalidFormat);
-            }
-
-            if (email.Length > EMAIL_MAX_LENGTH)
-            {
-                return Result.Failure<Email>(DomainErrors.Email.InvalidLength);
-            }
-
-            return new Email(email.Trim());
-        }
-
+        public static Result<Email> Create(string email) =>
+        
+            Result.Ensure(email,
+                (e => !string.IsNullOrWhiteSpace(e), DomainErrors.Email.Empty),
+                (e => EmailRegex().IsMatch(e.Trim()), DomainErrors.Email.InvalidFormat),
+                (e => e.Length <= EMAIL_MAX_LENGTH, DomainErrors.Email.InvalidLength))
+                .Map(e => new Email(e.Trim()));
+        
     }
 }

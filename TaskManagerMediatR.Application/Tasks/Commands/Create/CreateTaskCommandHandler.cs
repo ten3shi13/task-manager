@@ -32,7 +32,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.Create
 
             var priorityResult = Priority.FromValue(request.Priority);
             if (priorityResult.IsFailure)
-                return Result.Failure<Guid>(priorityResult.Error);
+                return Result.Failure<Guid>(priorityResult.Errors);
 
             var taskResult = Domain.Models.Task.Create(
                 Guid.NewGuid(),
@@ -45,7 +45,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.Create
                 request.DueDate);
 
             if (taskResult.IsFailure)
-                return Result.Failure<Guid>(taskResult.Error);
+                return Result.Failure<Guid>(taskResult.Errors);
 
             await _taskRepository.Add(taskResult.Value, cancellationToken);
             await _unitOfWork.CommitChangesAsync(cancellationToken);

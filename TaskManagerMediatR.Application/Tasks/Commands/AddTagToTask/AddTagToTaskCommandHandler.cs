@@ -34,7 +34,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask
 
             var colorResult = Color.FromCode(request.Code);
             if (colorResult.IsFailure)
-                return Result.Failure(colorResult.Error);
+                return Result.Failure(colorResult.Errors);
 
             var result = task.AddTag(request.Name, colorResult.Value);
             if (result.IsFailure)

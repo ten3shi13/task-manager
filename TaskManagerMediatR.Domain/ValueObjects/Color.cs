@@ -29,19 +29,17 @@ namespace TaskManagerMediatR.Domain.ValueObjects
         public static Result<Color> FromCode(string code)
         {
             if (string.IsNullOrWhiteSpace(code))
-            {
                 return Result.Failure<Color>(DomainErrors.Color.Empty);
-            }
 
-            var match = _all.FirstOrDefault(p =>
-                        string.Equals(p.Code, code.Trim(), StringComparison.OrdinalIgnoreCase));
+            var color = _all.FirstOrDefault(c =>
+                string.Equals(
+                    c.Code,
+                    code.Trim(),
+                    StringComparison.OrdinalIgnoreCase));
 
-            if (match is null)
-            {
-                return Result.Failure<Color>(DomainErrors.Priority.Invalid);
-            }
-
-            return match;
+            return color is not null
+                ? color
+                : Result.Failure<Color>(DomainErrors.Color.Invalid);
         }
 
         public override string ToString() => Code;

@@ -51,7 +51,7 @@ namespace TaskManagerMediatR.Domain.Models
             var validationResult = Validate(name, description);
 
             if (validationResult.IsFailure)
-                return Result.Failure<Project>(validationResult.Error);
+                return Result.Failure<Project>(validationResult.Errors);
 
             return new Project(id, name.Trim(), description.Trim(), ownerId);
         }
@@ -61,7 +61,7 @@ namespace TaskManagerMediatR.Domain.Models
             var validationResult = Validate(name, description);
 
             if (validationResult.IsFailure)
-                return Result.Failure(validationResult.Error);
+                return Result.Failure(validationResult.Errors);
 
             Name = name.Trim();
             Description = description.Trim();

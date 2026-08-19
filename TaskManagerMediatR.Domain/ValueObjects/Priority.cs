@@ -25,21 +25,20 @@ namespace TaskManagerMediatR.Domain.ValueObjects
 
         public static Result<Priority> FromValue(string value)
         {
-            if (string.IsNullOrWhiteSpace(value))
-            {
+            if(string.IsNullOrWhiteSpace(value))
                 return Result.Failure<Priority>(DomainErrors.Priority.Empty);
-            }
 
-            var match = _all.FirstOrDefault(p =>
-                        string.Equals(p.Value, value.Trim(), StringComparison.OrdinalIgnoreCase));
+            var priority = _all.FirstOrDefault(p =>
+                string.Equals(
+                    p.Value,
+                    value.Trim(),
+                    StringComparison.OrdinalIgnoreCase));
 
-            if (match is null)
-            {
-                return Result.Failure<Priority>(DomainErrors.Priority.Invalid);
-            }
-
-            return match;
+            return priority is not null
+                ? priority
+                : Result.Failure<Priority>(DomainErrors.Priority.Invalid);
         }
 
+        public override string ToString() => Value;
     }
 }

@@ -60,7 +60,7 @@ namespace TaskManagerMediatR.Domain.Models
             Status status,
             Priority priority,
             Guid createdById,
-            DateTime? dueDate = null)
+            DateTime? dueDate = null) 
         {
             if (string.IsNullOrWhiteSpace(title))
                 return Result.Failure<Task>(DomainErrors.Task.EmptyTitle);
@@ -160,7 +160,7 @@ namespace TaskManagerMediatR.Domain.Models
 
             var tagResult = Tag.Create(name, color);
             if (tagResult.IsFailure)
-                return Result.Failure(tagResult.Error);
+                return Result.Failure(tagResult.Errors);
 
             _tags.Add(tagResult.Value);
             UpdatedAt = DateTime.UtcNow;
@@ -184,7 +184,7 @@ namespace TaskManagerMediatR.Domain.Models
         {
             var commentResult = Comment.Create(authorId, text);
             if (commentResult.IsFailure)
-                return Result.Failure<Comment>(commentResult.Error);
+                return Result.Failure<Comment>(commentResult.Errors);
 
             _comments.Add(commentResult.Value);
             UpdatedAt = DateTime.UtcNow;
