@@ -51,7 +51,7 @@ namespace TaskManagerMediatR.API.Controllers
             var projectResult = await _sender.Send(new CreateProjectCommand(request.Name, request.Description, _currentUser.UserId), cancellationToken);
 
             if (projectResult.IsFailure)
-                    return Problem(projectResult.Error);
+                    return Problem(projectResult.Errors);
 
             return CreatedAtAction(
                 nameof(GetProjectById),

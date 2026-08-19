@@ -30,7 +30,7 @@ namespace TaskManagerMediatR.Application.Projects.Commands.Update
 
             var updateProjectResult = project.UpdateDetails(request.Name, request.Description);
             if (updateProjectResult.IsFailure)
-                return Result.Failure<Guid>(updateProjectResult.Error);
+                return Result.Failure<Guid>(updateProjectResult.Errors);
 
             await _unitOfWork.CommitChangesAsync(cancellationToken);
 

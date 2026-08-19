@@ -1,5 +1,4 @@
-﻿using TaskManagerMediatR.Domain.Errors;
-using TaskManagerMediatR.Domain.Shared;
+﻿using TaskManagerMediatR.Domain.Shared;
 
 namespace TaskManagerMediatR.API.Mappers
 {

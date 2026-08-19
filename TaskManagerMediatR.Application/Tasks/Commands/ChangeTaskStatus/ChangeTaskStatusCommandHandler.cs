@@ -34,7 +34,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.ChangeTaskStatus
 
             var statusResult = Status.FromValue(request.Status);
             if (statusResult.IsFailure)
-                return Result.Failure(statusResult.Error);
+                return Result.Failure(statusResult.Errors);
 
             var result = task.ChangeStatus(statusResult.Value);
             if (result.IsFailure)

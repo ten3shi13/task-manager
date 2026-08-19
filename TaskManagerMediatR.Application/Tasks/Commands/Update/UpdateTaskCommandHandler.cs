@@ -34,7 +34,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.Update
 
             var priorityResult = Priority.FromValue(request.Priority);
             if (priorityResult.IsFailure)
-                return Result.Failure(priorityResult.Error);
+                return Result.Failure(priorityResult.Errors);
 
             var result = task.UpdateDetails(
                 request.Title,

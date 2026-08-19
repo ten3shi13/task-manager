@@ -25,20 +25,20 @@ namespace TaskManagerMediatR.Domain.ValueObjects
 
         public static Result<Status> FromValue(string value)
         {
-            if (string.IsNullOrWhiteSpace(value))
-            {
+            if(string.IsNullOrWhiteSpace(value))
                 return Result.Failure<Status>(DomainErrors.Status.Empty);
-            }
 
-            var match = _all.FirstOrDefault(p =>
-                        string.Equals(p.Value, value.Trim(), StringComparison.OrdinalIgnoreCase));
+            var status = _all.FirstOrDefault(s =>
+                string.Equals(
+                    s.Value,
+                    value.Trim(),
+                    StringComparison.OrdinalIgnoreCase));
 
-            if (match is null)
-            {
-                return Result.Failure<Status>(DomainErrors.Status.Invalid);
-            }
-
-            return match;
+            return status is not null
+                ? status
+                : Result.Failure<Status>(DomainErrors.Status.Invalid);
         }
+
+        public override string ToString() => Value;
     }
 }

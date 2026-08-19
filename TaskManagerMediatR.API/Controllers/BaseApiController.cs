@@ -18,24 +18,62 @@ namespace TaskManagerMediatR.API.Controllers
         {
             return result.IsSuccess
                 ? NoContent()
-                : Problem(result.Error);
+                : Problem(result.Errors);
         }
 
         protected IActionResult FromResult<T>(Result<T> result)
         {
             return result.IsSuccess
                 ? Ok(result.Value)
-                : Problem(result.Error);
+                : Problem(result.Errors);
         }
 
         protected IActionResult CreatedAtActionResult<T>(Result<T> result, string actionName, object? routeValues = null)
         {
             return result.IsFailure 
-                ? Problem(result.Error) 
+                ? Problem(result.Errors) 
                 : CreatedAtAction(actionName, routeValues, result.Value);
         }
 
-        protected IActionResult Problem(Error error)
+        protected IActionResult Problem(params Error[] errors)
+        {
+            if (errors is null || errors.Length == 0)
+            {
+                errors = [Error.Failure("Error.Unknown", "An unknown error occurred.")];
+            }
+
+            if (errors.Length == 1)
+            {
+                return ProblemSingle(errors[0]);
+            }
+
+            var statusCode = errors.Max(ErrorMapper.ToStatusCode);
+
+            var problemDetails = new ProblemDetails
+            {
+                Status = statusCode,
+                Title = "Multiple errors occurred",
+                Detail = "See the 'errors' field for details.",
+                Instance = HttpContext.Request.Path,
+                Type = $"https://httpstatuses.com/{statusCode}"
+            };
+
+            problemDetails.Extensions["errors"] = errors.Select(e => new
+            {
+                code = e.Code,
+                message = e.Message,
+                type = e.ErrorType.ToString()
+            });
+
+            problemDetails.Extensions["traceId"] = HttpContext.TraceIdentifier;
+
+            return new ObjectResult(problemDetails)
+            {
+                StatusCode = statusCode
+            };
+        }
+
+        private ObjectResult ProblemSingle(Error error)
         {
             var statusCode = ErrorMapper.ToStatusCode(error);
 
@@ -49,6 +87,15 @@ namespace TaskManagerMediatR.API.Controllers
             };
 
             problemDetails.Extensions["errorCode"] = error.Code;
+            problemDetails.Extensions["errors"] = new[]
+            {
+            new
+            {
+                code = error.Code,
+                message = error.Message,
+                type = error.ErrorType.ToString()
+            }
+        };
             problemDetails.Extensions["traceId"] = HttpContext.TraceIdentifier;
 
             return new ObjectResult(problemDetails)

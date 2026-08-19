@@ -29,7 +29,7 @@ namespace TaskManagerMediatR.Application.Projects.Commands.Create
 
             var projectResult = Project.Create(Guid.NewGuid(), request.Name, request.Description, request.OwnerId);
             if (projectResult.IsFailure)
-                return Result.Failure<Guid>(projectResult.Error);
+                return Result.Failure<Guid>(projectResult.Errors);
 
             await _projectRepository.Add(projectResult.Value, cancellationToken);
             await _unitOfWork.CommitChangesAsync(cancellationToken);

@@ -61,7 +61,7 @@ namespace TaskManagerMediatR.API.Controllers
                 request.DueDate), cancellationToken);
 
             if (taskResult.IsFailure)
-                return Problem(taskResult.Error);
+                return Problem(taskResult.Errors);
 
             return CreatedAtAction(
                 nameof(GetTask),

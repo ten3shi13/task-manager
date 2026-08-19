@@ -33,7 +33,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddCommentToTask
 
             var result = task.AddComment(request.AuthorId, request.Text);
             if (result.IsFailure)
-                return Result.Failure<Guid>(result.Error);
+                return Result.Failure<Guid>(result.Errors);
 
             await _unitOfWork.CommitChangesAsync(cancellationToken);
 
