@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TaskManagerMediatR.Application.Shared.Abstractions;
 using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
+using TaskManagerMediatR.Infrastructure.Idempotence;
 using TaskManagerMediatR.Infrastructure.Projects.Persistence;
 using TaskManagerMediatR.Infrastructure.Services;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence;
@@ -17,6 +19,8 @@ namespace TaskManagerMediatR.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
+            services.Decorate(typeof(INotificationHandler<>), typeof(IdempotentDomainEventHandler<>));
+
             services.AddSingleton<ConvertDomainEventsToOutboxMessagesInterceptor>();
 
             services.AddDbContext<TaskManagerMediatRDbContext>(
