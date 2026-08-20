@@ -4,7 +4,7 @@ using TaskManagerMediatR.Contracts.Tasks;
 using TaskManagerMediatR.Domain.Errors;
 using TaskManagerMediatR.Domain.Shared;
 
-namespace TaskManagerMediatR.Application.Tasks.Queries.GetTask
+namespace TaskManagerMediatR.Application.Tasks.Queries.Get
 {
     public sealed class GetTaskQueryHandler : IQueryHandler<GetTaskQuery, TaskResponse>
     {

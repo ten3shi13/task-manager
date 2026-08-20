@@ -25,10 +25,18 @@ namespace TaskManagerMediatR.API.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(IReadOnlyList<ProjectResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetProjects(CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetProjects([FromQuery] FilterProjectsRequest request, CancellationToken cancellationToken)
         {
-            var projectsResult = await _sender.Send(new GetProjectsQuery(), cancellationToken);
+            var projectsResult = await _sender.Send(new GetProjectsQuery(
+                request.Page,
+                request.PageSize,
+                request.Search,
+                request.OwnerId,
+                request.MemberId,
+                request.SortBy,
+                request.SortOrder),
+            cancellationToken);
 
             return FromResult(projectsResult);
         }

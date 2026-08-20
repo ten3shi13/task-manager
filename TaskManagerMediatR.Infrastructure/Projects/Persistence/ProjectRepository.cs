@@ -22,6 +22,50 @@ namespace TaskManagerMediatR.Infrastructure.Projects.Persistence
 
             return projects;
         }
+        public IQueryable<Project> GetFiltered(
+            string? search,
+            Guid? ownerId,
+            Guid? memberId,
+            string sortBy,
+            string sortOrder)
+        {
+            var query = _context.Projects.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(p =>
+                    p.Name.Contains(term) ||
+                    (p.Description != null && p.Description.Contains(term)));
+            }
+
+            if (ownerId is not null)
+                query = query.Where(p => p.OwnerId == ownerId);
+
+            if (memberId is not null)
+                query = query.Where(p => p.Members.Any(m => m.UserId == memberId));
+
+            return ApplySorting(query, sortBy, sortOrder);
+        }
+
+        private static IQueryable<Project> ApplySorting(
+            IQueryable<Project> query,
+            string sortBy,
+            string sortOrder)
+        {
+            var desc = !string.Equals(sortOrder, "asc", StringComparison.OrdinalIgnoreCase);
+
+            return sortBy.ToLowerInvariant() switch
+            {
+                "name" => desc
+                    ? query.OrderByDescending(p => p.Name).ThenBy(p => p.Id)
+                    : query.OrderBy(p => p.Name).ThenBy(p => p.Id),
+
+                _ => desc
+                    ? query.OrderByDescending(p => p.CreatedAt).ThenBy(p => p.Id)
+                    : query.OrderBy(p => p.CreatedAt).ThenBy(p => p.Id)
+            };
+        }
 
         public async Task<Project?> GetById(Guid id, CancellationToken cancellationToken = default)
         {
@@ -31,6 +75,9 @@ namespace TaskManagerMediatR.Infrastructure.Projects.Persistence
 
             return project;
         }
+
+        public Task<bool> Exists(Guid id, CancellationToken ct = default)
+            => _context.Projects.AsNoTracking().AnyAsync(p => p.Id == id, ct);
 
         public async Task<ProjectMember?> GetMember(Guid id, Guid userId, CancellationToken cancellationToken = default)
         {

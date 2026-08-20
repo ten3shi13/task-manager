@@ -10,5 +10,14 @@ namespace TaskManagerMediatR.Application.Shared.Abstractions.Repositories
         Task<Task?> GetById(Guid id, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<Task>> GetByProjectId(Guid projectId, CancellationToken cancellationToken = default);
 
+        IQueryable<Task> GetFilteredByProjectId(
+            Guid projectId,
+            string? status,
+            string? priority,
+            Guid? assigneeId,
+            string? search,
+            string sortBy,
+            string sortOrder);
+
     }
 }
