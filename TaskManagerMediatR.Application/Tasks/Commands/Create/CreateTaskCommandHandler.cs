@@ -1,4 +1,5 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
@@ -9,17 +10,21 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.Create
 {
     public sealed class CreateTaskCommandHandler : ICommandHandler<CreateTaskCommand, Guid>
     {
-        private readonly IProjectRepository _projectRepository;
-        private readonly ITaskRepository _taskRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ITaskRepository _taskRepository;
+        private readonly IProjectRepository _projectRepository;
+        private readonly ITaskCacheInvalidator _taskCacheInvalidator;
+
         public CreateTaskCommandHandler(
-            IProjectRepository projectRepository,
+            IUnitOfWork unitOfWork,
             ITaskRepository taskRepository,
-            IUnitOfWork unitOfWork)
+            IProjectRepository projectRepository,
+            ITaskCacheInvalidator taskCacheInvalidator)
         {
-            _projectRepository = projectRepository;
-            _taskRepository = taskRepository;
             _unitOfWork = unitOfWork;
+            _taskRepository = taskRepository;
+            _projectRepository = projectRepository;
+            _taskCacheInvalidator = taskCacheInvalidator;
         }
         public async Task<Result<Guid>> Handle(CreateTaskCommand request, CancellationToken cancellationToken)
         {
@@ -48,7 +53,9 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.Create
                 return Result.Failure<Guid>(taskResult.Errors);
 
             await _taskRepository.Add(taskResult.Value, cancellationToken);
+
             await _unitOfWork.CommitChangesAsync(cancellationToken);
+            await _taskCacheInvalidator.InvalidateTasks(project.Id, cancellationToken);
 
             return taskResult.Value.Id;
 

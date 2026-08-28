@@ -7,15 +7,15 @@ namespace TaskManagerMediatR.Application.Tasks.Events
 {
     public sealed class TaskStatusChangedDomainEventHandler : IDomainEventHandler<TaskStatusChangedDomainEvent>
     {
-        private readonly ITaskRepository _taskRepository;
         private readonly IEmailService _emailService;
+        private readonly ITaskRepository _taskRepository;
 
         public TaskStatusChangedDomainEventHandler(
-            ITaskRepository taskRepository,
-            IEmailService emailService)
+            IEmailService emailService,
+            ITaskRepository taskRepository)
         {
-            _taskRepository = taskRepository;
             _emailService = emailService;
+            _taskRepository = taskRepository;
         }
 
         public async Task Handle(TaskStatusChangedDomainEvent notification, CancellationToken cancellationToken)

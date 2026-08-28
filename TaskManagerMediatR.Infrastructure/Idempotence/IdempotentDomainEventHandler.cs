@@ -7,17 +7,17 @@ using TaskManagerMediatR.Infrastructure.Shared.Persistence.Outbox;
 namespace TaskManagerMediatR.Infrastructure.Idempotence
 {
     internal sealed class IdempotentDomainEventHandler<TDomainEvent> : INotificationHandler<TDomainEvent>
-        where TDomainEvent : IDomainEvent
+                                                                        where TDomainEvent : IDomainEvent
     {
-        private readonly INotificationHandler<TDomainEvent> _decorated;
         private readonly TaskManagerMediatRDbContext _context;
+        private readonly INotificationHandler<TDomainEvent> _decorated;
 
         public IdempotentDomainEventHandler(
-            INotificationHandler<TDomainEvent> decorated,
-            TaskManagerMediatRDbContext context)
+            TaskManagerMediatRDbContext context,
+            INotificationHandler<TDomainEvent> decorated)
         {
-            _decorated = decorated;
             _context = context;
+            _decorated = decorated;
         }
 
         public async Task Handle(TDomainEvent notification, CancellationToken cancellationToken)

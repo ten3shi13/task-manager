@@ -10,6 +10,9 @@ namespace TaskManagerMediatR.Infrastructure.Shared.Persistence
         private static readonly Guid AdminUserId =
             Guid.Parse("11111111-1111-1111-1111-111111111111");
 
+        private static readonly Guid MemberUserId =
+            Guid.Parse("22222222-2222-2222-2222-222222222222");
+
         public async System.Threading.Tasks.Task SeedAsync(
             CancellationToken cancellationToken = default)
         {
@@ -18,17 +21,25 @@ namespace TaskManagerMediatR.Infrastructure.Shared.Persistence
                 return;
             }
 
-            var firstName = FirstName.Create("Admin");
+            var firstNameAdmin = FirstName.Create("Admin");
+            var firstNameMember = FirstName.Create("Member");
 
-            var email = Email.Create("admin@example.com");
+            var emailAdmin = Email.Create("admin@example.com");
+            var emailMember = Email.Create("member@example.com");
 
-            var user = User.Create(
+            var userAdmin = User.Create(
                 AdminUserId,
-                firstName.Value,
-                email.Value,
+                firstNameAdmin.Value,
+                emailAdmin.Value,
                 "111111");
 
-            dbContext.Users.Add(user.Value);
+            var userMember = User.Create(
+                MemberUserId,
+                firstNameMember.Value,
+                emailMember.Value,
+                "222222");
+
+            dbContext.Users.AddRange(userAdmin.Value, userMember.Value);
 
             await dbContext.SaveChangesAsync(cancellationToken);
         }

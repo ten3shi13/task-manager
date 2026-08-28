@@ -1,4 +1,5 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
@@ -8,15 +9,18 @@ namespace TaskManagerMediatR.Application.Projects.Commands.Update
 {
     public sealed class UpdateProjectCommandHandler : ICommandHandler<UpdateProjectCommand, Guid>
     {
-        private readonly IProjectRepository _projectRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IProjectRepository _projectRepository;
+        private readonly IProjectCacheInvalidator _projectCacheInvalidator;
 
         public UpdateProjectCommandHandler(
+            IUnitOfWork unitOfWork,
             IProjectRepository projectRepository,
-            IUnitOfWork unitOfWork)
+            IProjectCacheInvalidator projectCacheInvalidator)
         {
-            _projectRepository = projectRepository;
             _unitOfWork = unitOfWork;
+            _projectRepository = projectRepository;
+            _projectCacheInvalidator = projectCacheInvalidator;
         }
 
         public async Task<Result<Guid>> Handle(UpdateProjectCommand request, CancellationToken cancellationToken)
@@ -32,7 +36,10 @@ namespace TaskManagerMediatR.Application.Projects.Commands.Update
             if (updateProjectResult.IsFailure)
                 return Result.Failure<Guid>(updateProjectResult.Errors);
 
+            var affectedUserIds = project.Members.Select(g => g.UserId).ToList();
+
             await _unitOfWork.CommitChangesAsync(cancellationToken);
+            await _projectCacheInvalidator.InvalidateProjectWithProjects(affectedUserIds, project.Id, cancellationToken);
 
             return Result.Success(request.ProjectId);
         }

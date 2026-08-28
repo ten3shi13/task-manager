@@ -2,5 +2,8 @@
 
 namespace TaskManagerMediatR.Application.Projects.Commands.AddProjectMember
 {
-    public sealed record AddProjectMemberCommand(Guid ProjectId, Guid UserId, Guid AddedById) : ICommand;
+    public sealed record AddProjectMemberCommand(
+        Guid ProjectId,
+        Guid UserId,
+        Guid AddedById) : ICommand;
 }

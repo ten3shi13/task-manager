@@ -1,4 +1,5 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
@@ -9,17 +10,21 @@ namespace TaskManagerMediatR.Application.Projects.Commands.Create
 {
     public sealed class СreateProjectCommandHandler : ICommandHandler<CreateProjectCommand, Guid>
     {
-        private readonly IProjectRepository _projectRepository;
-        private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserRepository _userRepository;
+        private readonly IProjectRepository _projectRepository;
+        private readonly IProjectCacheInvalidator _projectCacheInvalidator;
+
         public СreateProjectCommandHandler(
-            IProjectRepository projectRepository,
+            IUnitOfWork unitOfWork,
             IUserRepository userRepository,
-            IUnitOfWork unitOfWork)
+            IProjectRepository projectRepository,
+            IProjectCacheInvalidator projectCacheInvalidator)
         {
-            _projectRepository = projectRepository;
-            _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _userRepository = userRepository;
+            _projectRepository = projectRepository;
+            _projectCacheInvalidator = projectCacheInvalidator;
         }
         public async Task<Result<Guid>> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
         {
@@ -33,6 +38,7 @@ namespace TaskManagerMediatR.Application.Projects.Commands.Create
 
             await _projectRepository.Add(projectResult.Value, cancellationToken);
             await _unitOfWork.CommitChangesAsync(cancellationToken);
+            await _projectCacheInvalidator.InvalidateProjects([projectResult.Value.OwnerId], cancellationToken);
 
             return projectResult.Value.Id;
         }

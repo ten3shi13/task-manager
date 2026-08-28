@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace TaskManagerMediatR.Application
+﻿namespace TaskManagerMediatR.Application
 {
     public sealed record AssemblyReference;
 }

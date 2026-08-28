@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Newtonsoft.Json;
-using TaskManagerMediatR.Domain.DomainEvents;
 using TaskManagerMediatR.Domain.Primitives;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence.Outbox;
 

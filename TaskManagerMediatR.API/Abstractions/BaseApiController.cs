@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using TaskManagerMediatR.API.Mappers;
 using TaskManagerMediatR.Domain.Shared;
 
-namespace TaskManagerMediatR.API.Controllers
+namespace TaskManagerMediatR.API.Abstractions
 {
     [ApiController]
     public abstract class BaseApiController : ControllerBase

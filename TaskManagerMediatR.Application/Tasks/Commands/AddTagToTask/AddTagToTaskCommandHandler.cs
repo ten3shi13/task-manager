@@ -1,4 +1,5 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
@@ -9,18 +10,21 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask
 {
     public sealed class AddTagToTaskCommandHandler : ICommandHandler<AddTagToTaskCommand>
     {
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ITaskRepository _taskRepository;
         private readonly IProjectRepository _projectRepository;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly ITaskCacheInvalidator _taskCacheInvalidator;
 
         public AddTagToTaskCommandHandler(
+            IUnitOfWork unitOfWork,
             ITaskRepository taskRepository,
             IProjectRepository projectRepository,
-            IUnitOfWork unitOfWork)
+            ITaskCacheInvalidator taskCacheInvalidator)
         {
+            _unitOfWork = unitOfWork;
             _taskRepository = taskRepository;
             _projectRepository = projectRepository;
-            _unitOfWork = unitOfWork;
+            _taskCacheInvalidator = taskCacheInvalidator;
         }
         public async Task<Result> Handle(AddTagToTaskCommand request, CancellationToken cancellationToken)
         {
@@ -28,7 +32,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask
             if (task is null)
                 return Result.Failure(DomainErrors.Task.NotFound);
 
-            var project = await _projectRepository.GetById(task.Id, cancellationToken);
+            var project = await _projectRepository.GetById(task.ProjectId, cancellationToken);
             if (project is null || !project.IsMember(request.AddingById))
                 return Result.Failure(DomainErrors.Project.UserIsNotMember);
 
@@ -41,6 +45,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask
                 return result;
 
             await _unitOfWork.CommitChangesAsync(cancellationToken);
+            await _taskCacheInvalidator.InvalidateTaskWithProjectTasks(task.ProjectId, task.Id, cancellationToken);
 
             return Result.Success();
         }

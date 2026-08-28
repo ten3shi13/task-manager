@@ -1,19 +1,21 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
-using TaskManagerMediatR.Application.Tasks.Commands.AddCommentToTask;
-using TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask;
-using TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask;
-using TaskManagerMediatR.Application.Tasks.Commands.ChangeTaskStatus;
+using TaskManagerMediatR.Contracts.Tasks;
+using TaskManagerMediatR.API.Abstractions;
+using TaskManagerMediatR.Application.Shared.Filters;
+using TaskManagerMediatR.Application.Tasks.Commands.Update;
+using TaskManagerMediatR.Application.Tasks.Queries.GetById;
 using TaskManagerMediatR.Application.Tasks.Commands.Create;
-using TaskManagerMediatR.Application.Tasks.Commands.DeleteComment;
 using TaskManagerMediatR.Application.Tasks.Commands.EditComment;
+using TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask;
+using TaskManagerMediatR.Application.Tasks.Commands.DeleteComment;
+using TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask;
+using TaskManagerMediatR.Application.Tasks.Commands.AddCommentToTask;
+using TaskManagerMediatR.Application.Tasks.Commands.ChangeTaskStatus;
+using TaskManagerMediatR.Application.Tasks.Queries.GetTasksByProject;
 using TaskManagerMediatR.Application.Tasks.Commands.RemoveTagFromTask;
 using TaskManagerMediatR.Application.Tasks.Commands.UnassignUserFromTask;
-using TaskManagerMediatR.Application.Tasks.Commands.Update;
-using TaskManagerMediatR.Application.Tasks.Queries.GetTask;
-using TaskManagerMediatR.Application.Tasks.Queries.GetTasksByProject;
-using TaskManagerMediatR.Contracts.Tasks;
+using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 
 namespace TaskManagerMediatR.API.Controllers
 {
@@ -28,11 +30,20 @@ namespace TaskManagerMediatR.API.Controllers
         }
 
         [HttpGet("{projectId:guid}/tasks")]
-        [ProducesResponseType(typeof(IReadOnlyList<TaskResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetTasksByProject(Guid projectId, CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(PagedList<TaskResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetTasksByProject(Guid projectId, [FromQuery] FilterTasksRequest request, CancellationToken cancellationToken)
         {
-            var tasksResult = await _sender.Send(new GetTasksByProjectQuery(projectId), cancellationToken);
+            var tasksResult = await _sender.Send(new GetTasksByProjectQuery(
+                projectId,
+                request.Page,
+                request.PageSize,
+                request.Status,
+                request.Priority,
+                request.AssigneeId,
+                request.Search,
+                request.SortBy,
+                request.SortOrder), cancellationToken);
 
             return FromResult(tasksResult);
         }
@@ -190,10 +201,10 @@ namespace TaskManagerMediatR.API.Controllers
         [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> ChangeStatus(Guid id, ChangeTaskStatusCommand request, CancellationToken cancellationToken)
+        public async Task<IActionResult> ChangeStatus(Guid id, ChangeTaskStatusRequest request, CancellationToken cancellationToken)
         {
             var statusResult = await _sender.Send(new ChangeTaskStatusCommand(
-                id, request.Status, request.ChangedById), cancellationToken);
+                id, request.Status, _currentUser.UserId), cancellationToken);
 
             return FromResult(statusResult);
 

@@ -1,5 +1,5 @@
-﻿using MediatR;
-using TaskManagerMediatR.Application.Shared.Abstractions;
+﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
@@ -9,18 +9,21 @@ namespace TaskManagerMediatR.Application.Projects.Commands.AddProjectMember
 {
     public sealed class AddProjectMemberCommandHandler : ICommandHandler<AddProjectMemberCommand>
     {
-        private readonly IProjectRepository _projectRepository;
-        private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserRepository _userRepository;
+        private readonly IProjectRepository _projectRepository;
+        private readonly IProjectCacheInvalidator _projectCacheInvalidator;
 
         public AddProjectMemberCommandHandler(
-            IProjectRepository projectRepository,
+            IUnitOfWork unitOfWork,
             IUserRepository userRepository,
-            IUnitOfWork unitOfWork)
+            IProjectRepository projectRepository,
+            IProjectCacheInvalidator projectCacheInvalidator)
         {
-            _projectRepository = projectRepository;
-            _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _userRepository = userRepository;
+            _projectRepository = projectRepository;
+            _projectCacheInvalidator = projectCacheInvalidator;
         }
 
         public async Task<Result> Handle(AddProjectMemberCommand request, CancellationToken cancellationToken)
@@ -40,7 +43,10 @@ namespace TaskManagerMediatR.Application.Projects.Commands.AddProjectMember
             if (addMemberResult.IsFailure)
                 return Result.Failure(addMemberResult.Errors);
 
+            var affectedUserIds = project.Members.Select(m => m.UserId).Append(request.UserId).ToList();
+
             await _unitOfWork.CommitChangesAsync(cancellationToken);
+            await _projectCacheInvalidator.InvalidateProjectWithProjects(affectedUserIds, project.Id, cancellationToken);
 
             return Result.Success();
         }
