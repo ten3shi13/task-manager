@@ -5,6 +5,7 @@ using TaskManagerMediatR.API.Middleware;
 using TaskManagerMediatR.Application;
 using TaskManagerMediatR.Infrastructure;
 using TaskManagerMediatR.Infrastructure.BackgroundJobs;
+using TaskManagerMediatR.API.OptionsSetup;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +22,12 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services
+    .AddApplication()
+    .AddInfrastructure(builder.Configuration)
+    .AddCaching(builder.Configuration);
+
+builder.Services.ConfigureOptions<CacheOptionsSetup>();
 
 builder.Services.AddQuartz(configure =>
 {

@@ -1,20 +1,21 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
+using TaskManagerMediatR.Contracts.Tasks;
+using TaskManagerMediatR.API.Abstractions;
 using TaskManagerMediatR.Application.Shared.Filters;
-using TaskManagerMediatR.Application.Tasks.Commands.AddCommentToTask;
-using TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask;
-using TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask;
-using TaskManagerMediatR.Application.Tasks.Commands.ChangeTaskStatus;
+using TaskManagerMediatR.Application.Tasks.Commands.Update;
+using TaskManagerMediatR.Application.Tasks.Queries.GetById;
 using TaskManagerMediatR.Application.Tasks.Commands.Create;
-using TaskManagerMediatR.Application.Tasks.Commands.DeleteComment;
 using TaskManagerMediatR.Application.Tasks.Commands.EditComment;
+using TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask;
+using TaskManagerMediatR.Application.Tasks.Commands.DeleteComment;
+using TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask;
+using TaskManagerMediatR.Application.Tasks.Commands.AddCommentToTask;
+using TaskManagerMediatR.Application.Tasks.Commands.ChangeTaskStatus;
+using TaskManagerMediatR.Application.Tasks.Queries.GetTasksByProject;
 using TaskManagerMediatR.Application.Tasks.Commands.RemoveTagFromTask;
 using TaskManagerMediatR.Application.Tasks.Commands.UnassignUserFromTask;
-using TaskManagerMediatR.Application.Tasks.Commands.Update;
-using TaskManagerMediatR.Application.Tasks.Queries.Get;
-using TaskManagerMediatR.Application.Tasks.Queries.GetTasksByProject;
-using TaskManagerMediatR.Contracts.Tasks;
+using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 
 namespace TaskManagerMediatR.API.Controllers
 {

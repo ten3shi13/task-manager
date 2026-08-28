@@ -6,8 +6,8 @@ namespace TaskManagerMediatR.Application.Tasks.Queries.GetTasksByProject
 {
     public sealed record GetTasksByProjectQuery(
         Guid ProjectId,
-        int Page = 1,
-        int PageSize = 20,
+        int Page = PageNormalization.DEFAULT_PAGE,
+        int PageSize = PageNormalization.DEFAULT_PAGE_SIZE,
         string? Status = null,
         string? Priority = null,
         Guid? AssigneeId = null,

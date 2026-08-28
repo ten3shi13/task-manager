@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace TaskManagerMediatR.Application.Shared.Filters
 {
     public sealed class PagedList<T>
     {
-        private PagedList(List<T> items, int page, int pageSize, int totalCount)
+        [JsonConstructor]
+        private PagedList(IReadOnlyList<T> items, int page, int pageSize, int totalCount)
         {
             Items = items;
             Page = page;
@@ -16,8 +18,11 @@ namespace TaskManagerMediatR.Application.Shared.Filters
         public int Page { get; }
         public int PageSize { get; }
         public int TotalCount { get; }
+        [JsonIgnore]
         public int TotalPages => PageSize == 0 ? 0 : (int)Math.Ceiling(TotalCount / (double)PageSize);
+        [JsonIgnore]
         public bool HasNextPage => Page * PageSize < TotalCount;
+        [JsonIgnore]
         public bool HasPreviousPage => Page > 1;
 
         public static async Task<PagedList<T>> CreateAsync(
@@ -26,8 +31,8 @@ namespace TaskManagerMediatR.Application.Shared.Filters
             int pageSize,
             CancellationToken cancellationToken = default)
         {
-            page = page < 1 ? 1 : page;
-            pageSize = pageSize is < 1 or > 100 ? 20 : pageSize;
+            page = PageNormalization.Page(page);
+            pageSize = PageNormalization.PageSize(pageSize);
 
             var totalCount = await query.CountAsync(cancellationToken);
 

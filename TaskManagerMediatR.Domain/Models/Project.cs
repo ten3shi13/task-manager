@@ -69,29 +69,29 @@ namespace TaskManagerMediatR.Domain.Models
             return Result.Success();
         }
 
-        public Result AddMember(Guid userId)
+        public Result<Guid> AddMember(Guid userId)
         {
             if (_members.Any(m => m.UserId == userId))
-                return Result.Failure(DomainErrors.Project.MemberAlreadyExists);
+                return Result.Failure<Guid>(DomainErrors.Project.MemberAlreadyExists);
 
             _members.Add(new ProjectMember(userId, ProjectRole.Member));
 
             RaiseDomainEvent(new ProjectMemberAddedDomainEvent(Guid.NewGuid(), Id, userId));
 
-            return Result.Success();
+            return Result.Success(userId);
         }
 
-        public Result RemoveMember(Guid userId)
+        public Result<Guid> RemoveMember(Guid userId)
         {
             if (userId == OwnerId)
-                return Result.Failure(DomainErrors.Project.CannotRemoveOwner);
+                return Result.Failure<Guid>(DomainErrors.Project.CannotRemoveOwner);
 
             var member = _members.FirstOrDefault(m => m.UserId == userId);
             if (member is null)
-                return Result.Failure(DomainErrors.Project.MemberNotFound);
+                return Result.Failure<Guid>(DomainErrors.Project.MemberNotFound);
 
             _members.Remove(member);
-            return Result.Success();
+            return Result.Success(userId);
         }
 
         public bool IsMember(Guid userId) =>

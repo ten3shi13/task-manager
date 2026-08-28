@@ -1,4 +1,5 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
@@ -8,18 +9,21 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddCommentToTask
 {
     internal class AddCommentToTaskCommandHandler : ICommandHandler<AddCommentToTaskCommand, Guid>
     {
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ITaskRepository _taskRepository;
         private readonly IProjectRepository _projectRepository;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly ITaskCacheInvalidator _taskCacheInvalidator;
 
         public AddCommentToTaskCommandHandler(
+            IUnitOfWork unitOfWork,
             ITaskRepository taskRepository,
             IProjectRepository projectRepository,
-            IUnitOfWork unitOfWork)
+            ITaskCacheInvalidator taskCacheInvalidator)
         {
+            _unitOfWork = unitOfWork;
             _taskRepository = taskRepository;
             _projectRepository = projectRepository;
-            _unitOfWork = unitOfWork;
+            _taskCacheInvalidator = taskCacheInvalidator;
         }
         public async Task<Result<Guid>> Handle(AddCommentToTaskCommand request, CancellationToken cancellationToken)
         {
@@ -34,8 +38,9 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddCommentToTask
             var result = task.AddComment(request.AuthorId, request.Text);
             if (result.IsFailure)
                 return Result.Failure<Guid>(result.Errors);
-
+            
             await _unitOfWork.CommitChangesAsync(cancellationToken);
+            await _taskCacheInvalidator.InvalidateTaskWithProjectTasks(task.ProjectId, task.Id, cancellationToken);
 
             return result.Value.Id;
         }

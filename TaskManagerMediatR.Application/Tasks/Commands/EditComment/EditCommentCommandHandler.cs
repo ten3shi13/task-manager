@@ -1,4 +1,5 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
@@ -8,15 +9,18 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.EditComment
 {
     public sealed class EditCommentCommandHandler : ICommandHandler<EditCommentCommand>
     {
-        private readonly ITaskRepository _taskRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ITaskRepository _taskRepository;
+        private readonly ITaskCacheInvalidator _taskCacheInvalidator;
 
         public EditCommentCommandHandler(
+            IUnitOfWork unitOfWork,
             ITaskRepository taskRepository,
-            IUnitOfWork unitOfWork)
+            ITaskCacheInvalidator taskCacheInvalidator)
         {
-            _taskRepository = taskRepository;
             _unitOfWork = unitOfWork;
+            _taskRepository = taskRepository;
+            _taskCacheInvalidator = taskCacheInvalidator;
         }
         public async Task<Result> Handle(EditCommentCommand request, CancellationToken cancellationToken)
         {
@@ -29,6 +33,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.EditComment
                 return result;
 
             await _unitOfWork.CommitChangesAsync(cancellationToken);
+            await _taskCacheInvalidator.InvalidateTaskWithProjectTasks(task.ProjectId, task.Id, cancellationToken);
 
             return Result.Success();
         }

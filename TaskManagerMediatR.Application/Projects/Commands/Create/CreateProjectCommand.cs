@@ -2,6 +2,9 @@
 
 namespace TaskManagerMediatR.Application.Projects.Commands.Create
 {
-    public sealed record CreateProjectCommand(string Name, string Description, Guid OwnerId) : ICommand<Guid>;
+    public sealed record CreateProjectCommand(
+        string Name,
+        string Description,
+        Guid OwnerId) : ICommand<Guid>;
 
 }

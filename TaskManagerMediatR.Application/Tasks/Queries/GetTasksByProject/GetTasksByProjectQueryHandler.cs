@@ -1,5 +1,8 @@
-﻿using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
+﻿using StackExchange.Redis;
+using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
+using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
+using TaskManagerMediatR.Application.Shared.Caching;
 using TaskManagerMediatR.Application.Shared.Filters;
 using TaskManagerMediatR.Contracts.Tasks;
 using TaskManagerMediatR.Domain.Errors;
@@ -10,15 +13,24 @@ namespace TaskManagerMediatR.Application.Tasks.Queries.GetTasksByProject
 {
     public sealed class GetTasksByProjectQueryHandler : IQueryHandler<GetTasksByProjectQuery, PagedList<TaskForProjectViewResponse>>
     {
+        private readonly ICacheService _cache;
         private readonly ITaskRepository _taskRepository;
         private readonly IProjectRepository _projectRepository;
+        private readonly ICacheVersionService _cacheVersionService;
+        private readonly IQueryCachePolicyFactory _cachePolicyFactory;
 
         public GetTasksByProjectQueryHandler(
+            ICacheService cache,
             ITaskRepository taskRepository,
-            IProjectRepository projectRepository)
+            IProjectRepository projectRepository,
+            ICacheVersionService cacheVersionService,
+            IQueryCachePolicyFactory cachePolicyFactory)
         {
+            _cache = cache;
             _taskRepository = taskRepository;
             _projectRepository = projectRepository;
+            _cachePolicyFactory = cachePolicyFactory;
+            _cacheVersionService = cacheVersionService;
         }
         public async Task<Result<PagedList<TaskForProjectViewResponse>>> Handle(GetTasksByProjectQuery request, CancellationToken cancellationToken)
         {
@@ -45,6 +57,42 @@ namespace TaskManagerMediatR.Application.Tasks.Queries.GetTasksByProject
                 priority = priorityResult.Value.Value;
             }
 
+            var queryType = TasksByProjectQueryClassifier.Classify(request);
+
+            var policy = _cachePolicyFactory.CreateForTasks();
+
+            if (!policy.ShouldCache(queryType))
+                return await GetFromDatabase(request, status, priority, cancellationToken);
+
+            var expiration = policy.GetExpiration(queryType);
+
+            var versionKey = CacheKeys.ProjectTasksVersion(request.ProjectId);
+
+            var version = await _cacheVersionService.Get(versionKey, cancellationToken);
+
+            var cacheKey = CacheKeys.ProjectTasks(request, version);
+
+            var cached = await _cache.Get<PagedList<TaskForProjectViewResponse>>(cacheKey, cancellationToken);
+
+            if (cached is not null)
+                return Result.Success(cached);
+
+            var result =  await GetFromDatabase(request, status, priority, cancellationToken);
+
+            if (result.IsFailure)
+                return result;
+
+            await _cache.Set(cacheKey, result.Value, expiration, cancellationToken);
+
+            return result;
+        }
+
+        private async Task<Result<PagedList<TaskForProjectViewResponse>>> GetFromDatabase(
+            GetTasksByProjectQuery request,
+            string? status,
+            string? priority,
+            CancellationToken cancellationToken)
+        {
             var query = _taskRepository.GetFilteredByProjectId(
                 request.ProjectId,
                 status,
@@ -69,7 +117,6 @@ namespace TaskManagerMediatR.Application.Tasks.Queries.GetTasksByProject
                 request.Page,
                 request.PageSize,
                 cancellationToken);
-
 
             return Result.Success(page);
         }

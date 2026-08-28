@@ -1,14 +1,15 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using TaskManagerMediatR.Application.Projects.Commands.AddProjectMember;
+using TaskManagerMediatR.API.Abstractions;
+using TaskManagerMediatR.Contracts.Projects;
 using TaskManagerMediatR.Application.Projects.Commands.Create;
 using TaskManagerMediatR.Application.Projects.Commands.Delete;
-using TaskManagerMediatR.Application.Projects.Commands.RemoveProjectMember;
 using TaskManagerMediatR.Application.Projects.Commands.Update;
-using TaskManagerMediatR.Application.Projects.Queries.Get;
 using TaskManagerMediatR.Application.Projects.Queries.GetById;
+using TaskManagerMediatR.Application.Projects.Commands.AddProjectMember;
+using TaskManagerMediatR.Application.Projects.Queries.GetProjectsByUser;
 using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
-using TaskManagerMediatR.Contracts.Projects;
+using TaskManagerMediatR.Application.Projects.Commands.RemoveProjectMember;
 
 namespace TaskManagerMediatR.API.Controllers
 {
@@ -28,11 +29,11 @@ namespace TaskManagerMediatR.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetProjects([FromQuery] FilterProjectsRequest request, CancellationToken cancellationToken)
         {
-            var projectsResult = await _sender.Send(new GetProjectsQuery(
+            var projectsResult = await _sender.Send(new GetProjectsByUserQuery(
+                _currentUser.UserId,
                 request.Page,
                 request.PageSize,
                 request.Search,
-                request.OwnerId,
                 request.MemberId,
                 request.SortBy,
                 request.SortOrder),
@@ -46,7 +47,7 @@ namespace TaskManagerMediatR.API.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetProjectById(Guid id,  CancellationToken cancellationToken)
         {
-            var projectResult = await _sender.Send(new GetProjectByIdQuery(id), cancellationToken);
+            var projectResult = await _sender.Send(new GetProjectQuery(id), cancellationToken);
 
             return FromResult(projectResult);
         }

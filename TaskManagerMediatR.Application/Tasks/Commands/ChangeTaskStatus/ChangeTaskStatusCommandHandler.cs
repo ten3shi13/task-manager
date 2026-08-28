@@ -1,4 +1,5 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
@@ -9,18 +10,21 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.ChangeTaskStatus
 {
     public sealed class ChangeTaskStatusCommandHandler : ICommandHandler<ChangeTaskStatusCommand>
     {
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ITaskRepository _taskRepository;
         private readonly IProjectRepository _projectRepository;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly ITaskCacheInvalidator _taskCacheInvalidator;
 
         public ChangeTaskStatusCommandHandler(
+            IUnitOfWork unitOfWork,
             ITaskRepository taskRepository,
             IProjectRepository projectRepository,
-            IUnitOfWork unitOfWork)
+            ITaskCacheInvalidator taskCacheInvalidator)
         {
+            _unitOfWork = unitOfWork;
             _taskRepository = taskRepository;
             _projectRepository = projectRepository;
-            _unitOfWork = unitOfWork;
+            _taskCacheInvalidator = taskCacheInvalidator;
         }
         public async Task<Result> Handle(ChangeTaskStatusCommand request, CancellationToken cancellationToken)
         {
@@ -41,6 +45,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.ChangeTaskStatus
                 return result;
 
             await _unitOfWork.CommitChangesAsync(cancellationToken);
+            await _taskCacheInvalidator.InvalidateTaskWithProjectTasks(task.ProjectId, task.Id, cancellationToken);
 
             return Result.Success();
         }

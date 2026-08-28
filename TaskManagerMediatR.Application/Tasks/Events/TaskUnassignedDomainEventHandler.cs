@@ -7,18 +7,18 @@ namespace TaskManagerMediatR.Application.Tasks.Events
 {
     public sealed class TaskUnassignedDomainEventHandler : IDomainEventHandler<TaskUnassignedDomainEvent>
     {
-        private readonly ITaskRepository _taskRepository;
-        private readonly IUserRepository _userRepository;
         private readonly IEmailService _emailService;
+        private readonly IUserRepository _userRepository;
+        private readonly ITaskRepository _taskRepository;
 
         public TaskUnassignedDomainEventHandler(
-            ITaskRepository taskRepository,
+            IEmailService emailService,
             IUserRepository userRepository,
-            IEmailService emailService)
+            ITaskRepository taskRepository)
         {
-            _taskRepository = taskRepository;
-            _userRepository = userRepository;
             _emailService = emailService;
+            _userRepository = userRepository;
+            _taskRepository = taskRepository;
         }
 
         public async Task Handle(TaskUnassignedDomainEvent notification, CancellationToken cancellationToken)

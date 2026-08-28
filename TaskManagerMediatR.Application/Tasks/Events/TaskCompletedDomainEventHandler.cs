@@ -7,15 +7,15 @@ namespace TaskManagerMediatR.Application.Tasks.Events
 {
     public sealed class TaskCompletedDomainEventHandler : IDomainEventHandler<TaskCompletedDomainEvent>
     {
-        private readonly ITaskRepository _taskRepository;
         private readonly IEmailService _emailService;
+        private readonly ITaskRepository _taskRepository;
 
         public TaskCompletedDomainEventHandler(
-            ITaskRepository taskRepository,
-            IEmailService emailService)
+            IEmailService emailService,
+            ITaskRepository taskRepository)
         {
-            _taskRepository = taskRepository;
             _emailService = emailService;
+            _taskRepository = taskRepository;
         }
 
         public async Task Handle(TaskCompletedDomainEvent notification, CancellationToken cancellationToken)

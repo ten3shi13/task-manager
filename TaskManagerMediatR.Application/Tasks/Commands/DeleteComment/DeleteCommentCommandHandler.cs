@@ -1,4 +1,5 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
@@ -8,15 +9,18 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.DeleteComment
 {
     public sealed class DeleteCommentCommandHandler : ICommandHandler<DeleteCommentCommand>
     {
-        private readonly ITaskRepository _taskRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ITaskRepository _taskRepository;
+        private readonly ITaskCacheInvalidator _taskCacheInvalidator;
 
         public DeleteCommentCommandHandler(
+            IUnitOfWork unitOfWork,
             ITaskRepository taskRepository,
-            IUnitOfWork unitOfWork)
+            ITaskCacheInvalidator taskCacheInvalidator)
         {
-            _taskRepository = taskRepository;
             _unitOfWork = unitOfWork;
+            _taskRepository = taskRepository;
+            _taskCacheInvalidator = taskCacheInvalidator;
         }
 
         public async Task<Result> Handle(DeleteCommentCommand request, CancellationToken cancellationToken)
@@ -30,6 +34,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.DeleteComment
                 return result;
 
             await _unitOfWork.CommitChangesAsync(cancellationToken);
+            await _taskCacheInvalidator.InvalidateTaskWithProjectTasks(task.ProjectId, task.Id, cancellationToken);
 
             return Result.Success();
         }

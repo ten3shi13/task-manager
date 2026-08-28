@@ -1,4 +1,5 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
@@ -8,21 +9,24 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask
 {
     public sealed class AssignUserToTaskCommandHandler : ICommandHandler<AssignUserToTaskCommand>
     {
-        private readonly ITaskRepository _taskRepository;
-        private readonly IProjectRepository _projectRepository;
-        private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ITaskRepository _taskRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IProjectRepository _projectRepository;
+        private readonly ITaskCacheInvalidator _taskCacheInvalidator;
 
         public AssignUserToTaskCommandHandler(
+            IUnitOfWork unitOfWork,
             ITaskRepository taskRepository,
-            IProjectRepository projectRepository,
             IUserRepository userRepository,
-            IUnitOfWork unitOfWork)
+            IProjectRepository projectRepository,
+            ITaskCacheInvalidator taskCacheInvalidator)
         {
-            _taskRepository = taskRepository;
-            _projectRepository = projectRepository;
-            _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _taskRepository = taskRepository;
+            _userRepository = userRepository;
+            _projectRepository = projectRepository;
+            _taskCacheInvalidator = taskCacheInvalidator;
         }
         public async Task<Result> Handle(AssignUserToTaskCommand request, CancellationToken cancellationToken)
         {
@@ -49,6 +53,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask
                 return result;
 
             await _unitOfWork.CommitChangesAsync(cancellationToken);
+            await _taskCacheInvalidator.InvalidateTaskWithProjectTasks(task.ProjectId, task.Id, cancellationToken);
 
             return Result.Success();
         }
