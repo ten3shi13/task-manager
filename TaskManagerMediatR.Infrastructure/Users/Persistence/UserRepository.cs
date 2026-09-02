@@ -15,18 +15,19 @@ namespace TaskManagerMediatR.Infrastructure.Users.Persistence
 
         public async Task<IReadOnlyList<User>> Get(CancellationToken cancellationToken = default)
         {
-            var users = await _context.Users
+            return await _context.Users
                                     .AsNoTracking()
                                     .ToListAsync(cancellationToken);
-
-            return users;
         }
 
         public async Task<User?> GetById(Guid id, CancellationToken cancellationToken = default)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+            return await _context.Users.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        }
 
-            return user;
+        public async Task<User?> GetByEmail(string email, CancellationToken cancellationToken = default)
+        {
+            return await _context.Users.FirstOrDefaultAsync(p => p.Email.Value == email, cancellationToken);
         }
 
         public async Task<Guid> Add(User user, CancellationToken cancellationToken = default)

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TaskManagerMediatR.Application.Shared.Authentication;
 using TaskManagerMediatR.Domain.Models;
 using TaskManagerMediatR.Domain.ValueObjects;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence.Constants;
@@ -37,6 +38,11 @@ namespace TaskManagerMediatR.Infrastructure.Users.Persistence
 
             builder.Property(u => u.PasswordHash)
                 .HasMaxLength(512)
+                .IsRequired();
+
+            builder.Property(x => x.Role)
+                .HasMaxLength(32)
+                .HasDefaultValue(Roles.User)
                 .IsRequired();
 
             builder.Property(u => u.CreatedAt)

@@ -1,4 +1,6 @@
-﻿using TaskManagerMediatR.Domain.Primitives;
+﻿using System.Data;
+using TaskManagerMediatR.Domain.Errors;
+using TaskManagerMediatR.Domain.Primitives;
 using TaskManagerMediatR.Domain.Shared;
 using TaskManagerMediatR.Domain.ValueObjects;
 
@@ -19,12 +21,14 @@ namespace TaskManagerMediatR.Domain.Models
             Email = email;
             PasswordHash = passwordHash;
             CreatedAt = DateTime.UtcNow;
+            Role = Roles.User;
         }
 
 
         public FirstName FirstName { get; private set; } = null!;
         public Email Email { get; private set; } = null!;
         public string PasswordHash { get; private set; } = string.Empty;
+        public string Role { get; private set; } = string.Empty;
         public DateTime CreatedAt { get; private set; }
 
 
@@ -40,6 +44,15 @@ namespace TaskManagerMediatR.Domain.Models
         public Result ChangeName(FirstName firstName)
         {
             FirstName = firstName;
+            return Result.Success();
+        }
+
+        public Result ChangeRole(string role)
+        {
+            if (!Roles.IsValid(role))
+                return Result.Failure(DomainErrors.User.InvalidRole);
+
+            Role = Roles.Normalize(role);
             return Result.Success();
         }
 

@@ -18,6 +18,9 @@ namespace TaskManagerMediatR.Domain.Errors
             public static readonly Error EmailAlreadyInUse = 
                 Error.Unauthorized("User.EmailAlreadyInUse", "The specified email is already in use");
 
+            public static readonly Error InvalidRole = 
+                Error.Validation("User.InvalidRole", "User role is invalid");
+
         }
 
         public static class Email

@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
@@ -11,6 +12,7 @@ using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Application.Shared.Caching;
+using TaskManagerMediatR.Domain.Models;
 using TaskManagerMediatR.Infrastructure.Caching;
 using TaskManagerMediatR.Infrastructure.Idempotence;
 using TaskManagerMediatR.Infrastructure.Projects.Persistence;
@@ -37,7 +39,7 @@ namespace TaskManagerMediatR.Infrastructure
                 var mux = sp.GetRequiredService<IConnectionMultiplexer>();
                 return new RedisCache(Options.Create(new RedisCacheOptions
                 {
-                    ConnectionMultiplexerFactory = () => Task.FromResult(mux),
+                    ConnectionMultiplexerFactory = () => System.Threading.Tasks.Task.FromResult(mux),
                     InstanceName = "taskmanager:"
                 }));
             });
@@ -76,6 +78,24 @@ namespace TaskManagerMediatR.Infrastructure
             services.AddScoped<IUnitOfWork>(serviceProvider => serviceProvider.GetRequiredService<TaskManagerMediatRDbContext>());
 
             services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
+
+
+            services.AddScoped<IJwtTokenService, JwtTokenService>();
+            
+            services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+            services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
+
+            services.AddAuthorization(options =>
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+
+                options.AddPolicy("AdminOnly", p => p.RequireRole(Roles.Admin));
+            });
+
+            services.AddHttpContextAccessor();
+            services.AddScoped<ICurrentUser, CurrentUser>();
 
             return services;
         } 
