@@ -1,24 +1,27 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TaskManagerMediatR.Contracts.Tasks;
 using TaskManagerMediatR.API.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 using TaskManagerMediatR.Application.Shared.Filters;
-using TaskManagerMediatR.Application.Tasks.Commands.Update;
-using TaskManagerMediatR.Application.Tasks.Queries.GetById;
-using TaskManagerMediatR.Application.Tasks.Commands.Create;
-using TaskManagerMediatR.Application.Tasks.Commands.EditComment;
-using TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask;
-using TaskManagerMediatR.Application.Tasks.Commands.DeleteComment;
-using TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask;
 using TaskManagerMediatR.Application.Tasks.Commands.AddCommentToTask;
+using TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask;
+using TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask;
 using TaskManagerMediatR.Application.Tasks.Commands.ChangeTaskStatus;
-using TaskManagerMediatR.Application.Tasks.Queries.GetTasksByProject;
+using TaskManagerMediatR.Application.Tasks.Commands.Create;
+using TaskManagerMediatR.Application.Tasks.Commands.Delete;
+using TaskManagerMediatR.Application.Tasks.Commands.DeleteComment;
+using TaskManagerMediatR.Application.Tasks.Commands.EditComment;
 using TaskManagerMediatR.Application.Tasks.Commands.RemoveTagFromTask;
 using TaskManagerMediatR.Application.Tasks.Commands.UnassignUserFromTask;
-using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
+using TaskManagerMediatR.Application.Tasks.Commands.Update;
+using TaskManagerMediatR.Application.Tasks.Queries.GetById;
+using TaskManagerMediatR.Application.Tasks.Queries.GetTasksByProject;
+using TaskManagerMediatR.Contracts.Tasks;
 
 namespace TaskManagerMediatR.API.Controllers
 {
+    [Authorize]
     [ApiVersion("1.0")]
     [Route("api/[controller]")]
     public sealed class TasksController : BaseApiController
@@ -30,7 +33,9 @@ namespace TaskManagerMediatR.API.Controllers
         }
 
         [HttpGet("{projectId:guid}/tasks")]
-        [ProducesResponseType(typeof(PagedList<TaskResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PagedList<TaskForProjectViewResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetTasksByProject(Guid projectId, [FromQuery] FilterTasksRequest request, CancellationToken cancellationToken)
         {
@@ -50,6 +55,8 @@ namespace TaskManagerMediatR.API.Controllers
 
         [HttpGet("{id:guid}")]
         [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetTask(Guid id, CancellationToken cancellationToken)
         {
@@ -59,8 +66,11 @@ namespace TaskManagerMediatR.API.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateTask(CreateTaskRequest request, CancellationToken cancellationToken)
         {
             var taskResult = await _sender.Send(new CreateTaskCommand(
@@ -82,8 +92,10 @@ namespace TaskManagerMediatR.API.Controllers
         }
 
         [HttpPut("{id:guid}")]
-        [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateTask(Guid id, UpdateTaskRequest request, CancellationToken cancellationToken)
         {
@@ -99,16 +111,23 @@ namespace TaskManagerMediatR.API.Controllers
 
         }
 
-        //[HttpDelete("{id:guid}")]
-        //[ProducesResponseType(StatusCodes.Status204NoContent)]
-        //[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-        //public async Task<IActionResult> DeleteTask(Guid id, CancellationToken cancellationToken)
-        //{
-        //}
+        [HttpDelete("{id:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteTask(Guid id, CancellationToken cancellationToken)
+        {
+            var result = await _sender.Send(new DeleteTaskCommand(id), cancellationToken);
+
+            return FromResult(result);
+        }
 
         [HttpPost("{taskId:guid}/assignments/{userId:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AssignUser(Guid taskId, Guid userId, CancellationToken cancellationToken)
         {
@@ -122,6 +141,8 @@ namespace TaskManagerMediatR.API.Controllers
         [HttpDelete("{taskId:guid}/assignments/{userId:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UnassignUser(Guid taskId, Guid userId, CancellationToken cancellationToken)
         {
@@ -135,6 +156,8 @@ namespace TaskManagerMediatR.API.Controllers
         [HttpPost("{id:guid}/tags")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AddTag(Guid id, AddTagToTaskRequest request, CancellationToken cancellationToken)
         {
@@ -148,6 +171,8 @@ namespace TaskManagerMediatR.API.Controllers
         [HttpDelete("{id:guid}/tags/{tagId:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RemoveTag(Guid id, Guid tagId, CancellationToken cancellationToken)
         {
@@ -161,6 +186,8 @@ namespace TaskManagerMediatR.API.Controllers
         [HttpPost("{id:guid}/comments")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AddComment(Guid id, AddCommentToTaskRequest request, CancellationToken cancellationToken)
         {
@@ -172,8 +199,10 @@ namespace TaskManagerMediatR.API.Controllers
         }
 
         [HttpPut("{id:guid}/comments/{commentId:guid}")]
-        [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> EditComment(Guid id, Guid commentId, EditCommentRequest request, CancellationToken cancellationToken)
         {
@@ -187,6 +216,8 @@ namespace TaskManagerMediatR.API.Controllers
         [HttpDelete("{id:guid}/comments/{commentId:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RemoveComment(Guid id, Guid commentId, CancellationToken cancellationToken)
         {
@@ -198,8 +229,10 @@ namespace TaskManagerMediatR.API.Controllers
         }
 
         [HttpPatch("{id:guid}/status")]
-        [ProducesResponseType(typeof(TaskResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ChangeStatus(Guid id, ChangeTaskStatusRequest request, CancellationToken cancellationToken)
         {

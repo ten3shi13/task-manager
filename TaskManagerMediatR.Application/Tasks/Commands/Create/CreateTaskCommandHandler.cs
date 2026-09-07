@@ -1,8 +1,10 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
+using TaskManagerMediatR.Domain.Models;
 using TaskManagerMediatR.Domain.Shared;
 using TaskManagerMediatR.Domain.ValueObjects;
 
@@ -11,17 +13,20 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.Create
     public sealed class CreateTaskCommandHandler : ICommandHandler<CreateTaskCommand, Guid>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUser _currentUser;
         private readonly ITaskRepository _taskRepository;
         private readonly IProjectRepository _projectRepository;
         private readonly ITaskCacheInvalidator _taskCacheInvalidator;
 
         public CreateTaskCommandHandler(
             IUnitOfWork unitOfWork,
+            ICurrentUser currentUser,
             ITaskRepository taskRepository,
             IProjectRepository projectRepository,
             ITaskCacheInvalidator taskCacheInvalidator)
         {
             _unitOfWork = unitOfWork;
+            _currentUser = currentUser;
             _taskRepository = taskRepository;
             _projectRepository = projectRepository;
             _taskCacheInvalidator = taskCacheInvalidator;
@@ -32,7 +37,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.Create
             if (project is null)
                 return Result.Failure<Guid>(DomainErrors.Project.NotFound);
 
-            if (!project.IsMember(request.CreatedById))
+            if (!project.IsOwner(request.CreatedById) || !_currentUser.IsInRole(Roles.Admin))
                 return Result.Failure<Guid>(DomainErrors.Project.UserIsNotMember);
 
             var priorityResult = Priority.FromValue(request.Priority);

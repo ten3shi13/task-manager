@@ -1,18 +1,20 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskManagerMediatR.API.Abstractions;
-using TaskManagerMediatR.Contracts.Projects;
+using TaskManagerMediatR.Application.Projects.Commands.AddProjectMember;
 using TaskManagerMediatR.Application.Projects.Commands.Create;
 using TaskManagerMediatR.Application.Projects.Commands.Delete;
+using TaskManagerMediatR.Application.Projects.Commands.RemoveProjectMember;
 using TaskManagerMediatR.Application.Projects.Commands.Update;
 using TaskManagerMediatR.Application.Projects.Queries.GetById;
-using TaskManagerMediatR.Application.Projects.Commands.AddProjectMember;
 using TaskManagerMediatR.Application.Projects.Queries.GetProjectsByUser;
 using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
-using TaskManagerMediatR.Application.Projects.Commands.RemoveProjectMember;
+using TaskManagerMediatR.Contracts.Projects;
 
 namespace TaskManagerMediatR.API.Controllers
 {
+    [Authorize]
     [ApiVersion("1.0")]
     [Route("api/[controller]")]
     //[Route("api/v{version:apiVersion}/[controller]")]   
@@ -26,7 +28,7 @@ namespace TaskManagerMediatR.API.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(IReadOnlyList<ProjectResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetProjects([FromQuery] FilterProjectsRequest request, CancellationToken cancellationToken)
         {
             var projectsResult = await _sender.Send(new GetProjectsByUserQuery(
@@ -44,6 +46,8 @@ namespace TaskManagerMediatR.API.Controllers
 
         [HttpGet("{id:guid}")]
         [ProducesResponseType(typeof(ProjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetProjectById(Guid id,  CancellationToken cancellationToken)
         {
@@ -53,8 +57,9 @@ namespace TaskManagerMediatR.API.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(ProjectResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> CreateProject(CreateProjectRequest request, CancellationToken cancellationToken)
         {
             var projectResult = await _sender.Send(new CreateProjectCommand(request.Name, request.Description, _currentUser.UserId), cancellationToken);
@@ -70,8 +75,10 @@ namespace TaskManagerMediatR.API.Controllers
         }
 
         [HttpPut("{id:guid}")]
-        [ProducesResponseType(typeof(ProjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateProject(Guid id, UpdateProjectRequest request, CancellationToken cancellationToken)
         {
@@ -83,7 +90,9 @@ namespace TaskManagerMediatR.API.Controllers
 
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteProject(Guid id, CancellationToken cancellationToken)
         {
             var projectResult = await _sender.Send(new DeleteProjectCommand(id), cancellationToken);
@@ -95,6 +104,8 @@ namespace TaskManagerMediatR.API.Controllers
         [HttpPost("{projectId:guid}/members/{userId:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AddMember(Guid projectId, Guid userId, CancellationToken cancellationToken)
         {
@@ -107,6 +118,8 @@ namespace TaskManagerMediatR.API.Controllers
         [HttpDelete("{projectId:guid}/members/{userId:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RemoveMember(Guid projectId, Guid userId, CancellationToken cancellationToken)
         {

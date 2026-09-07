@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.Options;
+﻿using System.Text;
+using System.Security.Claims;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
-using TaskManagerMediatR.Application.Shared.Authentication;
 using TaskManagerMediatR.Domain.Models;
+using TaskManagerMediatR.Application.Shared.Authentication;
+using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 
 namespace TaskManagerMediatR.Infrastructure.Shared.Persistence.Authentication
 {
@@ -13,6 +13,9 @@ namespace TaskManagerMediatR.Infrastructure.Shared.Persistence.Authentication
     {
         private readonly JwtTokenOptions _jwtTokenOptions;
         private readonly SymmetricSecurityKey _securityKey;
+
+        public DateTime AccessTokenExpiresAtUtc =>
+            DateTime.UtcNow.AddMinutes(_jwtTokenOptions.AccessTokenExpirationMinutes);
         public JwtTokenService(IOptions<JwtTokenOptions> jwtTokenOptions)
         {
             _jwtTokenOptions = jwtTokenOptions.Value;
@@ -29,6 +32,9 @@ namespace TaskManagerMediatR.Infrastructure.Shared.Persistence.Authentication
                 new(ClaimTypes.Role, user.Role)
             };
 
+            foreach (var permission in RolePermissions.ForRoles([user.Role]))
+                claims.Add(new Claim(CustomClaims.Permission, permission));
+
             var credentionals = new SigningCredentials(_securityKey, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
@@ -36,19 +42,10 @@ namespace TaskManagerMediatR.Infrastructure.Shared.Persistence.Authentication
                 audience: _jwtTokenOptions.Audience,
                 claims: claims,
                 notBefore: DateTime.UtcNow,
-                expires: DateTime.UtcNow.AddMinutes(_jwtTokenOptions.AccessTokenExpirationMinutes),
-                signingCredentials: credentionals
-                );
-
-            foreach (var permission in RolePermissions.ForRole(user.Role))
-                claims.Add(new Claim(CustomClaims.Permission, permission));
+                expires: AccessTokenExpiresAtUtc,
+                signingCredentials: credentionals);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        public string GenerateRefreshToken()
-        {
-            throw new NotImplementedException();
         }
     }
 }

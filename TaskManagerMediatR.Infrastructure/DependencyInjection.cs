@@ -16,6 +16,8 @@ using TaskManagerMediatR.Domain.Models;
 using TaskManagerMediatR.Infrastructure.Caching;
 using TaskManagerMediatR.Infrastructure.Idempotence;
 using TaskManagerMediatR.Infrastructure.Projects.Persistence;
+using TaskManagerMediatR.Infrastructure.Providers;
+using TaskManagerMediatR.Infrastructure.RefreshTokens.Persistence;
 using TaskManagerMediatR.Infrastructure.Services;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence.Authentication;
@@ -68,10 +70,10 @@ namespace TaskManagerMediatR.Infrastructure
                         .AddInterceptors(sp.GetRequiredService<ConvertDomainEventsToOutboxMessagesInterceptor>());
                 });
 
-            services.AddScoped<ICurrentUser, CurrentUser>();
             services.AddScoped<IProjectRepository, ProjectRepository>();
             services.AddScoped<ITaskRepository, TaskRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
             services.AddScoped<IEmailService, EmailService>();
 
@@ -80,8 +82,11 @@ namespace TaskManagerMediatR.Infrastructure
             services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 
 
-            services.AddScoped<IJwtTokenService, JwtTokenService>();
-            
+            services.AddScoped<IPasswordHasher, PasswordHasher>();
+            services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+
+            services.AddSingleton<IJwtTokenService, JwtTokenService>();
+            services.AddSingleton<ITokenHashService, TokenHashService>();
             services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
             services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
@@ -96,6 +101,8 @@ namespace TaskManagerMediatR.Infrastructure
 
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUser, CurrentUser>();
+            
+            services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
             return services;
         } 

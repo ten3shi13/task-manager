@@ -76,8 +76,8 @@ namespace TaskManagerMediatR.Infrastructure.Projects.Persistence
             return project;
         }
 
-        public Task<bool> Exists(Guid id, CancellationToken ct = default)
-            => _context.Projects.AsNoTracking().AnyAsync(p => p.Id == id, ct);
+        public async Task<bool> Exists(Guid id, CancellationToken ct = default) => 
+           await _context.Projects.AsNoTracking().AnyAsync(p => p.Id == id, ct);
 
         public async Task<ProjectMember?> GetMember(Guid id, Guid userId, CancellationToken cancellationToken = default)
         {
@@ -95,7 +95,7 @@ namespace TaskManagerMediatR.Infrastructure.Projects.Persistence
         {
 
             await _context.Projects.AddAsync(project, cancellationToken);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             return project.Id;
         }

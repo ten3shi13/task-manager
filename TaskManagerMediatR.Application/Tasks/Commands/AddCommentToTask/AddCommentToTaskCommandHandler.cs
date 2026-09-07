@@ -1,8 +1,10 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
+using TaskManagerMediatR.Domain.Models;
 using TaskManagerMediatR.Domain.Shared;
 
 namespace TaskManagerMediatR.Application.Tasks.Commands.AddCommentToTask
@@ -10,12 +12,14 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddCommentToTask
     internal class AddCommentToTaskCommandHandler : ICommandHandler<AddCommentToTaskCommand, Guid>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUser _currentUser;
         private readonly ITaskRepository _taskRepository;
         private readonly IProjectRepository _projectRepository;
         private readonly ITaskCacheInvalidator _taskCacheInvalidator;
 
         public AddCommentToTaskCommandHandler(
             IUnitOfWork unitOfWork,
+            ICurrentUser currentUser,
             ITaskRepository taskRepository,
             IProjectRepository projectRepository,
             ITaskCacheInvalidator taskCacheInvalidator)
@@ -24,6 +28,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddCommentToTask
             _taskRepository = taskRepository;
             _projectRepository = projectRepository;
             _taskCacheInvalidator = taskCacheInvalidator;
+            _currentUser = currentUser;
         }
         public async Task<Result<Guid>> Handle(AddCommentToTaskCommand request, CancellationToken cancellationToken)
         {
@@ -32,7 +37,10 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddCommentToTask
                 return Result.Failure<Guid>(DomainErrors.Task.NotFound);
 
             var project = await _projectRepository.GetById(task.ProjectId, cancellationToken);
-            if (project is null || !project.IsMember(request.AuthorId))
+            if (project is null)
+                return Result.Failure<Guid>(DomainErrors.Project.NotFound);
+
+            if (!project.IsMember(request.AuthorId) || !_currentUser.IsInRole(Roles.Admin))
                 return Result.Failure<Guid>(DomainErrors.Project.UserIsNotMember);
 
             var result = task.AddComment(request.AuthorId, request.Text);

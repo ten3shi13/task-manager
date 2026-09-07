@@ -7,7 +7,7 @@ using TaskManagerMediatR.Infrastructure.Shared.Persistence.Authentication;
 
 namespace TaskManagerMediatR.API.OptionsSetup
 {
-    public sealed class JwtBearerTokenOptionsSetup : IConfigureOptions<JwtBearerOptions>
+    public sealed class JwtBearerTokenOptionsSetup : IConfigureNamedOptions<JwtBearerOptions>
     {
         private readonly JwtTokenOptions _jwtTokenOptions;
 
@@ -33,5 +33,8 @@ namespace TaskManagerMediatR.API.OptionsSetup
                 NameClaimType = ClaimTypes.NameIdentifier,
             };
         }
+
+        public void Configure(string? name, JwtBearerOptions options) => 
+            Configure(options);
     }
 }

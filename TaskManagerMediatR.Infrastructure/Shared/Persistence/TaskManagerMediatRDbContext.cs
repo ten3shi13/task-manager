@@ -11,6 +11,7 @@ namespace TaskManagerMediatR.Infrastructure.Shared.Persistence
         public DbSet<Project> Projects => Set<Project>();
         public DbSet<Domain.Models.Task> Tasks => Set<Domain.Models.Task>();
         public DbSet<User> Users => Set<User>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

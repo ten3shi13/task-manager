@@ -2,5 +2,6 @@
 {
     public sealed record RegisterRequest(
         string FirstName,
-        string Email);
+        string Email,
+        string Password);
 }

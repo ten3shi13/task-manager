@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Models;
 using TaskManagerMediatR.Infrastructure.Shared.Persistence;
-using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 
 namespace TaskManagerMediatR.Infrastructure.Users.Persistence
 {
@@ -20,30 +20,26 @@ namespace TaskManagerMediatR.Infrastructure.Users.Persistence
                                     .ToListAsync(cancellationToken);
         }
 
-        public async Task<User?> GetById(Guid id, CancellationToken cancellationToken = default)
-        {
-            return await _context.Users.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
-        }
+        public async Task<User?> GetById(Guid id, CancellationToken cancellationToken = default) =>
+            await _context.Users.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 
-        public async Task<User?> GetByEmail(string email, CancellationToken cancellationToken = default)
-        {
-            return await _context.Users.FirstOrDefaultAsync(p => p.Email.Value == email, cancellationToken);
-        }
+        public async Task<User?> GetByEmail(string email, CancellationToken cancellationToken = default) =>
+            await _context.Users.FirstOrDefaultAsync(p => p.Email.Value == email, cancellationToken);
+
+        public async Task<bool> ExistsByEmail(string email, CancellationToken cancellationToken = default) =>
+            await _context.Users.AsNoTracking().AnyAsync(u => u.Email.Value == email, cancellationToken);
 
         public async Task<Guid> Add(User user, CancellationToken cancellationToken = default)
         {
-
             await _context.Users.AddAsync(user, cancellationToken);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             return user.Id;
         }
 
-        public async Task<int> Delete(Guid id, CancellationToken cancellationToken = default)
-        {
-            return await _context.Users
+        public async Task<int> Delete(Guid id, CancellationToken cancellationToken = default) =>
+            await _context.Users
                 .Where(p => p.Id == id)
                 .ExecuteDeleteAsync(cancellationToken);
-        }
     }
 }

@@ -5,6 +5,6 @@ namespace TaskManagerMediatR.Application.Shared.Abstractions.Authentication
     public interface IJwtTokenService
     {
         string GenerateAccessToken(User user);
-        string GenerateRefreshToken();
+        DateTime AccessTokenExpiresAtUtc { get; }
     }
 }

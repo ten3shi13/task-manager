@@ -4,5 +4,6 @@ namespace TaskManagerMediatR.Application.Users.Commands.Register
 {
     public sealed record RegisterCommand(
         string FirstName,
-        string Email) : ICommand<Guid>;
+        string Email,
+        string Password) : ICommand<Guid>;
 }

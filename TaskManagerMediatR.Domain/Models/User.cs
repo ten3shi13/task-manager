@@ -22,6 +22,7 @@ namespace TaskManagerMediatR.Domain.Models
             PasswordHash = passwordHash;
             CreatedAt = DateTime.UtcNow;
             Role = Roles.User;
+            AccessFailedCount = 0;
         }
 
 
@@ -31,6 +32,30 @@ namespace TaskManagerMediatR.Domain.Models
         public string Role { get; private set; } = string.Empty;
         public DateTime CreatedAt { get; private set; }
 
+
+        public int AccessFailedCount { get; private set; }
+        public DateTime? LockoutEndUtc { get; private set; }
+
+        public bool IsLockedOut(DateTime utcNow) =>
+            LockoutEndUtc.HasValue && LockoutEndUtc > utcNow;
+
+        public void RegisterFailedAccess(DateTime utcNow, int maxAttempts, TimeSpan lockoutFor)
+        {
+            AccessFailedCount++;
+            if (AccessFailedCount >= maxAttempts)
+            {
+                LockoutEndUtc = utcNow.Add(lockoutFor);
+                AccessFailedCount = 0;
+            }
+        }
+
+        public void ResetAccessFailed()
+        {
+            AccessFailedCount = 0;
+            LockoutEndUtc = null;
+        }
+
+        public void ChangePassword(string newHash) => PasswordHash = newHash;
 
         public static Result<User> Create(Guid id,
             FirstName firstName,

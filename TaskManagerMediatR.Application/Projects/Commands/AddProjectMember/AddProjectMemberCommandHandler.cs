@@ -1,8 +1,10 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
+using TaskManagerMediatR.Domain.Models;
 using TaskManagerMediatR.Domain.Shared;
 
 namespace TaskManagerMediatR.Application.Projects.Commands.AddProjectMember
@@ -10,17 +12,20 @@ namespace TaskManagerMediatR.Application.Projects.Commands.AddProjectMember
     public sealed class AddProjectMemberCommandHandler : ICommandHandler<AddProjectMemberCommand>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUser _currentUser;
         private readonly IUserRepository _userRepository;
         private readonly IProjectRepository _projectRepository;
         private readonly IProjectCacheInvalidator _projectCacheInvalidator;
 
         public AddProjectMemberCommandHandler(
             IUnitOfWork unitOfWork,
+            ICurrentUser currentUser,
             IUserRepository userRepository,
             IProjectRepository projectRepository,
             IProjectCacheInvalidator projectCacheInvalidator)
         {
             _unitOfWork = unitOfWork;
+            _currentUser = currentUser;
             _userRepository = userRepository;
             _projectRepository = projectRepository;
             _projectCacheInvalidator = projectCacheInvalidator;
@@ -32,7 +37,7 @@ namespace TaskManagerMediatR.Application.Projects.Commands.AddProjectMember
             if (project is null)
                 return Result.Failure(DomainErrors.Project.NotFound);
 
-            if (!project.IsOwner(request.AddedById))
+            if (!project.IsOwner(request.AddedById) || !_currentUser.IsInRole(Roles.Admin))
                 return Result.Failure(DomainErrors.Project.UserIsNotMember);
 
             var user = await _userRepository.GetById(request.UserId, cancellationToken);
