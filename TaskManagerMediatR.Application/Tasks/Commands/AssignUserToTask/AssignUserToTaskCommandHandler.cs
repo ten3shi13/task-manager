@@ -1,8 +1,10 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
+using TaskManagerMediatR.Domain.Models;
 using TaskManagerMediatR.Domain.Shared;
 
 namespace TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask
@@ -10,6 +12,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask
     public sealed class AssignUserToTaskCommandHandler : ICommandHandler<AssignUserToTaskCommand>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUser _currentUser;
         private readonly ITaskRepository _taskRepository;
         private readonly IUserRepository _userRepository;
         private readonly IProjectRepository _projectRepository;
@@ -17,12 +20,14 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask
 
         public AssignUserToTaskCommandHandler(
             IUnitOfWork unitOfWork,
+            ICurrentUser currentUser,
             ITaskRepository taskRepository,
             IUserRepository userRepository,
             IProjectRepository projectRepository,
             ITaskCacheInvalidator taskCacheInvalidator)
         {
             _unitOfWork = unitOfWork;
+            _currentUser = currentUser;
             _taskRepository = taskRepository;
             _userRepository = userRepository;
             _projectRepository = projectRepository;
@@ -38,7 +43,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AssignUserToTask
             if (project is null)
                 return Result.Failure(DomainErrors.Project.NotFound);
 
-            if (!project.IsMember(request.AssignedById))
+            if (!project.IsMember(request.AssignedById) || !_currentUser.IsInRole(Roles.Admin))
                 return Result.Failure(DomainErrors.Project.UserIsNotMember);
 
             if (!project.IsMember(request.UserId))

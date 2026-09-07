@@ -6,6 +6,7 @@ using TaskManagerMediatR.Application;
 using TaskManagerMediatR.Infrastructure;
 using TaskManagerMediatR.Infrastructure.BackgroundJobs;
 using TaskManagerMediatR.API.OptionsSetup;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,21 @@ builder.Services.AddSwaggerGen(options =>
         Title = "Task Manager API RESTful API",
         Version = "v1",
         Description = "Task Manager API RESTful API Doc.",
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Enter the JWT token in this field",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = JwtBearerDefaults.AuthenticationScheme,
+        BearerFormat = "JWT"
+    });
+
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, document)] = []
     });
 });
 
@@ -47,6 +63,11 @@ builder.Services.AddQuartzHostedService(options =>
     options.WaitForJobsToComplete = true;
 });
 
+builder.Services.ConfigureOptions<JwtTokenOptionsSetup>();
+builder.Services.ConfigureOptions<JwtBearerTokenOptionsSetup>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -65,6 +86,9 @@ if (app.Environment.IsDevelopment())
 
     });
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

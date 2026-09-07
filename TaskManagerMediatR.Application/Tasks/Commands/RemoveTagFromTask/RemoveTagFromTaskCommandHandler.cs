@@ -1,8 +1,10 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
+using TaskManagerMediatR.Domain.Models;
 using TaskManagerMediatR.Domain.Shared;
 
 namespace TaskManagerMediatR.Application.Tasks.Commands.RemoveTagFromTask
@@ -10,17 +12,20 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.RemoveTagFromTask
     public sealed class RemoveTagFromTaskCommandHandler : ICommandHandler<RemoveTagFromTaskCommand>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUser _currentUser;
         private readonly ITaskRepository _taskRepository;
         private readonly IProjectRepository _projectRepository;
         private readonly ITaskCacheInvalidator _taskCacheInvalidator;
 
         public RemoveTagFromTaskCommandHandler(
             IUnitOfWork unitOfWork,
+            ICurrentUser currentUser,
             ITaskRepository taskRepository,
             IProjectRepository projectRepository,
             ITaskCacheInvalidator taskCacheInvalidator)
         {
             _unitOfWork = unitOfWork;
+            _currentUser = currentUser;
             _taskRepository = taskRepository;
             _projectRepository = projectRepository;
             _taskCacheInvalidator = taskCacheInvalidator;
@@ -33,7 +38,10 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.RemoveTagFromTask
                 return Result.Failure(DomainErrors.Task.NotFound);
 
             var project = await _projectRepository.GetById(task.ProjectId, cancellationToken);
-            if (project is null || !project.IsMember(request.RemovedById))
+            if (project is null)
+                return Result.Failure<Guid>(DomainErrors.Project.NotFound);
+
+            if(!project.IsMember(request.RemovedById) || !_currentUser.IsInRole(Roles.Admin))
                 return Result.Failure(DomainErrors.Project.UserIsNotMember);
 
             var result = task.RemoveTag(request.TagId);

@@ -102,7 +102,7 @@ namespace TaskManagerMediatR.Infrastructure.Projects.Persistence
         {
 
             await _context.Tasks.AddAsync(task, cancellationToken);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             return task.Id;
         }

@@ -18,4 +18,10 @@
     <ProjectReference Include="..\TaskManagerMediatR.Domain\TaskManagerMediatR.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Users\Commands\Update\" />
+    <Folder Include="Users\Commands\Delete\" />
+    <Folder Include="Users\Events\" />
+  </ItemGroup>
+
 </Project>

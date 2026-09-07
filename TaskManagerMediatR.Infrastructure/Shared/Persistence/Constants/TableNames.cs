@@ -11,5 +11,6 @@
         internal const string Assignments = nameof(Assignments);
         internal const string OutboxMessages = nameof(OutboxMessages);
         internal const string OutboxMessageConsumers = nameof(OutboxMessageConsumers);
+        internal const string RefreshTokens = nameof(RefreshTokens);
     }
 }

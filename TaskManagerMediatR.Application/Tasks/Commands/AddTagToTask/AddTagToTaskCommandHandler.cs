@@ -1,8 +1,10 @@
 ﻿using TaskManagerMediatR.Application.Shared.Abstractions;
+using TaskManagerMediatR.Application.Shared.Abstractions.Authentication;
 using TaskManagerMediatR.Application.Shared.Abstractions.Caching;
 using TaskManagerMediatR.Application.Shared.Abstractions.Messaging;
 using TaskManagerMediatR.Application.Shared.Abstractions.Repositories;
 using TaskManagerMediatR.Domain.Errors;
+using TaskManagerMediatR.Domain.Models;
 using TaskManagerMediatR.Domain.Shared;
 using TaskManagerMediatR.Domain.ValueObjects;
 
@@ -11,12 +13,14 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask
     public sealed class AddTagToTaskCommandHandler : ICommandHandler<AddTagToTaskCommand>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUser _currentUser;
         private readonly ITaskRepository _taskRepository;
         private readonly IProjectRepository _projectRepository;
         private readonly ITaskCacheInvalidator _taskCacheInvalidator;
 
         public AddTagToTaskCommandHandler(
             IUnitOfWork unitOfWork,
+            ICurrentUser currentUser,
             ITaskRepository taskRepository,
             IProjectRepository projectRepository,
             ITaskCacheInvalidator taskCacheInvalidator)
@@ -25,6 +29,7 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask
             _taskRepository = taskRepository;
             _projectRepository = projectRepository;
             _taskCacheInvalidator = taskCacheInvalidator;
+            _currentUser = currentUser;
         }
         public async Task<Result> Handle(AddTagToTaskCommand request, CancellationToken cancellationToken)
         {
@@ -33,7 +38,10 @@ namespace TaskManagerMediatR.Application.Tasks.Commands.AddTagToTask
                 return Result.Failure(DomainErrors.Task.NotFound);
 
             var project = await _projectRepository.GetById(task.ProjectId, cancellationToken);
-            if (project is null || !project.IsMember(request.AddingById))
+            if (project is null)
+                return Result.Failure<Guid>(DomainErrors.Project.NotFound);
+
+            if (!project.IsMember(request.AddingById) || !_currentUser.IsInRole(Roles.Admin))
                 return Result.Failure(DomainErrors.Project.UserIsNotMember);
 
             var colorResult = Color.FromCode(request.Code);

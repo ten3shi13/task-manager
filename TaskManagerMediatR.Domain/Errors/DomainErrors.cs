@@ -16,8 +16,22 @@ namespace TaskManagerMediatR.Domain.Errors
                 Error.Unauthorized("User.InvalidCredentials", "The provided credentials are invalid");
 
             public static readonly Error EmailAlreadyInUse = 
-                Error.Unauthorized("User.EmailAlreadyInUse", "The specified email is already in use");
+                Error.Conflict("User.EmailAlreadyInUse", "The specified email is already in use");
 
+            public static readonly Error LockedOut =
+                Error.Unauthorized("User.LockedOut", "LockedOut");
+
+            public static readonly Error InvalidRole = 
+                Error.Validation("User.InvalidRole", "User role is invalid");
+        }
+
+        public static class RefreshToken
+        {
+            public static readonly Error Invalid =
+                Error.Unauthorized("RefreshToken.Invalid", "Invalid refresh token");
+
+            public static readonly Error Reuse =
+                Error.Unauthorized("RefreshToken.Reuse", "Refresh token reuse");
         }
 
         public static class Email
